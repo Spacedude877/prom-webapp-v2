@@ -14,6 +14,8 @@ export interface FormQuestion {
   placeholder?: string;
   required: boolean;
   options?: string[]; // For select, radio, checkbox
+  value?: string;
+  checkboxLabel?: string;
 }
 
 export interface FormData {
@@ -23,4 +25,7 @@ export interface FormData {
   questions: FormQuestion[];
   completed: boolean;
   dueDate: string;
+  name?: string;
+  type?: 'active' | 'upcoming' | 'overdue';
+  fields?: FormQuestion[];
 }

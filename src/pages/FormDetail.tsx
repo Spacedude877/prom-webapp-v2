@@ -1,304 +1,209 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Save, Check } from "lucide-react";
-import Navigation from "@/components/layout/Navigation";
-import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { FormData, FormItemType } from "@/types/forms";
+import Navigation from "@/components/layout/Navigation";
+import { ChevronLeft } from "lucide-react";
 
-// Mock form data - this would come from an API in a real application
-const mockFormData: Record<string, FormData> = {
+// Sample form templates for demonstration
+const formTemplates = {
   "form-1": {
-    id: "form-1",
-    title: "Guest Info",
-    description: "Please provide your guest information for the event.",
-    dueDate: "3/21",
+    name: "Student Formal Registration",
+    type: "active",
     completed: true,
-    questions: [
-      {
-        id: "q1",
-        type: "text",
-        label: "Full Name",
-        placeholder: "Enter your full name",
-        required: true,
+    fields: [
+      { id: "firstname", type: "text", label: "First Name", required: true, value: "Jane" },
+      { id: "surname", type: "text", label: "Surname", required: true, value: "Doe" },
+      { id: "student-number", type: "text", label: "Student Number", required: true, value: "S12345" },
+      { id: "student-email", type: "email", label: "Student Email Address", required: true, value: "jane.doe@student.edu" },
+      { 
+        id: "grade-level", 
+        type: "select", 
+        label: "Grade Level", 
+        required: true, 
+        options: ["Junior Grade 11", "Senior Grade 12"],
+        value: "Senior Grade 12"
       },
-      {
-        id: "q2",
-        type: "email",
-        label: "Email Address",
-        placeholder: "Enter your email address",
-        required: true,
+      { 
+        id: "ticket-type", 
+        type: "select", 
+        label: "Ticket Type", 
+        required: true, 
+        options: ["Senior Early Bird HK$690", "Regular Early Bird HK$690", "Regular Ticket HK$750"],
+        value: "Senior Early Bird HK$690"
       },
-      {
-        id: "q3",
-        type: "select",
-        label: "Number of Guests",
+      { 
+        id: "paying-for-guest", 
+        type: "radio", 
+        label: "Are you paying for a guest?", 
+        options: ["Yes", "No"], 
         required: true,
-        options: ["1", "2", "3", "4", "5+"],
-      },
-      {
-        id: "q4",
-        type: "textarea",
-        label: "Special Requests",
-        placeholder: "Any special requests or notes",
-        required: false,
+        value: "No"
       },
     ],
   },
   "form-2": {
-    id: "form-2",
-    title: "Seating Request",
-    description: "Please provide your seating preferences for the event.",
-    dueDate: "3/23",
+    name: "Table Booking Form",
+    type: "active",
     completed: false,
-    questions: [
-      {
-        id: "q1",
-        type: "radio",
-        label: "Seating Preference",
+    fields: [
+      { 
+        id: "party-size", 
+        type: "select", 
+        label: "Party Size", 
+        options: ["2", "5", "10"], 
+        required: true 
+      },
+      { 
+        id: "party-members", 
+        type: "textarea", 
+        label: "Names of the members in your party", 
         required: true,
-        options: ["Front", "Middle", "Back"],
+        placeholder: "Please list the full names of all members in your party"
       },
-      {
-        id: "q2",
-        type: "checkbox",
-        label: "Accessibility Requirements",
-        required: false,
-        options: ["Wheelchair Access", "Hearing Assistance", "Visual Assistance", "Other"],
-      },
-      {
-        id: "q3",
-        type: "textarea",
-        label: "Additional Notes",
-        placeholder: "Any additional seating requests",
-        required: false,
-      },
+      { id: "accessibility", type: "checkbox", label: "Accessibility Requirements", required: false },
+      { id: "additional-notes", type: "textarea", label: "Additional Notes", required: false },
     ],
   },
   "form-3": {
-    id: "form-3",
-    title: "Dietary Preferences",
-    description: "Please indicate any dietary restrictions or preferences.",
-    dueDate: "4/02",
+    name: "Feedback Form",
+    type: "upcoming",
     completed: false,
-    questions: [
-      {
-        id: "q1",
-        type: "checkbox",
-        label: "Dietary Restrictions",
-        required: true,
-        options: [
-          "Vegetarian", 
-          "Vegan", 
-          "Gluten-Free", 
-          "Dairy-Free", 
-          "Nut Allergy", 
-          "Seafood Allergy",
-          "None"
-        ],
-      },
-      {
-        id: "q2",
-        type: "textarea",
-        label: "Additional Dietary Information",
-        placeholder: "Please provide any additional details about your dietary needs",
-        required: false,
-      },
+    fields: [
+      { id: "rating", type: "radio", label: "Overall Experience", options: ["Excellent", "Good", "Average", "Poor"], required: true },
+      { id: "feedback", type: "textarea", label: "Your Feedback", required: true },
+      { id: "contact-permission", type: "checkbox", label: "May we contact you about your feedback?", required: false },
     ],
   },
   "form-4": {
-    id: "form-4",
-    title: "Travel Arrangements",
-    description: "Please provide your travel details for the event.",
-    dueDate: "4/10",
+    name: "Travel Arrangements",
+    type: "upcoming",
     completed: false,
-    questions: [
-      {
-        id: "q1",
-        type: "radio",
-        label: "Travel Method",
-        required: true,
-        options: ["Driving", "Flying", "Train", "Other"],
-      },
-      {
-        id: "q2",
-        type: "text",
-        label: "Arrival Date",
-        placeholder: "MM/DD/YYYY",
-        required: true,
-      },
-      {
-        id: "q3",
-        type: "text",
-        label: "Departure Date",
-        placeholder: "MM/DD/YYYY",
-        required: true,
-      },
-      {
-        id: "q4",
-        type: "textarea",
-        label: "Additional Travel Information",
-        placeholder: "Flight number, arrival time, etc.",
-        required: false,
-      },
+    fields: [
+      { id: "travel-method", type: "radio", label: "Travel Method", options: ["Driving", "Flying", "Train", "Other"], required: true },
+      { id: "arrival-date", type: "text", label: "Arrival Date", placeholder: "MM/DD/YYYY", required: true },
+      { id: "departure-date", type: "text", label: "Departure Date", placeholder: "MM/DD/YYYY", required: true },
+      { id: "travel-info", type: "textarea", label: "Additional Travel Information", placeholder: "Flight number, arrival time, etc.", required: false },
     ],
   },
   "form-5": {
-    id: "form-5",
-    title: "Budget Approval",
-    description: "Please review and approve the budget for the upcoming event.",
-    dueDate: "2/28",
+    name: "Budget Approval",
+    type: "overdue",
     completed: false,
-    questions: [
-      {
-        id: "q1",
-        type: "number",
-        label: "Budget Amount",
-        placeholder: "Enter budget amount",
-        required: true,
+    fields: [
+      { id: "budget-amount", type: "number", label: "Budget Amount", placeholder: "Enter budget amount", required: true },
+      { 
+        id: "budget-category", 
+        type: "select", 
+        label: "Budget Category", 
+        required: true, 
+        options: ["Marketing", "Operations", "Staffing", "Venue", "Catering", "Other"] 
       },
-      {
-        id: "q2",
-        type: "select",
-        label: "Budget Category",
-        required: true,
-        options: ["Marketing", "Operations", "Staffing", "Venue", "Catering", "Other"],
+      { 
+        id: "approval-status", 
+        type: "radio", 
+        label: "Approval Status", 
+        required: true, 
+        options: ["Approved", "Rejected", "Pending"] 
       },
-      {
-        id: "q3",
-        type: "radio",
-        label: "Approval Status",
-        required: true,
-        options: ["Approved", "Rejected", "Pending"],
-      },
-      {
-        id: "q4",
-        type: "textarea",
-        label: "Comments",
-        placeholder: "Add any comments regarding the budget",
-        required: false,
-      },
+      { id: "comments", type: "textarea", label: "Comments", placeholder: "Add any comments regarding the budget", required: false },
     ],
   },
   "form-6": {
-    id: "form-6",
-    title: "Feedback Survey",
-    description: "Please provide your feedback on the recent event.",
-    dueDate: "3/01",
+    name: "Feedback Survey",
+    type: "overdue",
     completed: false,
-    questions: [
-      {
-        id: "q1",
-        type: "radio",
-        label: "Overall Experience",
-        required: true,
-        options: ["Excellent", "Good", "Average", "Poor", "Very Poor"],
+    fields: [
+      { 
+        id: "overall-experience", 
+        type: "radio", 
+        label: "Overall Experience", 
+        required: true, 
+        options: ["Excellent", "Good", "Average", "Poor", "Very Poor"] 
       },
-      {
-        id: "q2",
-        type: "checkbox",
-        label: "What aspects did you enjoy?",
-        required: false,
-        options: ["Venue", "Food", "Speakers", "Networking", "Activities", "Other"],
+      { 
+        id: "enjoyed-aspects", 
+        type: "checkbox", 
+        label: "What aspects did you enjoy?", 
+        required: false, 
+        options: ["Venue", "Food", "Speakers", "Networking", "Activities", "Other"] 
       },
-      {
-        id: "q3",
-        type: "checkbox",
-        label: "What aspects could be improved?",
-        required: false,
-        options: ["Venue", "Food", "Speakers", "Networking", "Activities", "Other"],
+      { 
+        id: "improvement-aspects", 
+        type: "checkbox", 
+        label: "What aspects could be improved?", 
+        required: false, 
+        options: ["Venue", "Food", "Speakers", "Networking", "Activities", "Other"] 
       },
-      {
-        id: "q4",
-        type: "textarea",
-        label: "Additional Feedback",
-        placeholder: "Please share any additional feedback or suggestions",
-        required: false,
-      },
+      { id: "additional-feedback", type: "textarea", label: "Additional Feedback", placeholder: "Please share any additional feedback or suggestions", required: false },
     ],
   },
 };
 
-// Mock forms list
-const mockForms: FormItemType[] = [
-  {
-    id: "form-1",
-    title: "Guest Info",
-    dueDate: "3/21",
-    completed: true,
-    type: "active",
-  },
-  {
-    id: "form-2",
-    title: "Seating Request",
-    dueDate: "3/23",
-    completed: false,
-    type: "active",
-  },
-  {
-    id: "form-3",
-    title: "Dietary Preferences",
-    dueDate: "4/02",
-    completed: false,
-    type: "upcoming",
-  },
-  {
-    id: "form-4",
-    title: "Travel Arrangements",
-    dueDate: "4/10",
-    completed: false,
-    type: "upcoming",
-  },
-  {
-    id: "form-5",
-    title: "Budget Approval",
-    dueDate: "2/28",
-    completed: false,
-    type: "overdue",
-  },
-  {
-    id: "form-6",
-    title: "Feedback Survey",
-    dueDate: "3/01",
-    completed: false,
-    type: "overdue",
-  },
-];
-
-const FormDetail = () => {
-  const { formId } = useParams<{ formId: string }>();
+function FormDetail() {
+  const { formId } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [form, setForm] = useState<FormData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [formData, setFormData] = useState<any>(null);
   const [formValues, setFormValues] = useState<Record<string, any>>({});
+  const [isCompleted, setIsCompleted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API fetch
+    // Simulate API fetch with a small delay
     const timer = setTimeout(() => {
-      if (formId && mockFormData[formId]) {
-        setForm(mockFormData[formId]);
-        setIsComplete(mockFormData[formId].completed);
+      // In a real app, you would fetch the form data from an API
+      if (formId && formTemplates[formId as keyof typeof formTemplates]) {
+        const template = formTemplates[formId as keyof typeof formTemplates];
+        setFormData(template);
+        setIsCompleted(template.completed || false);
+        
+        // Initialize form values from template
+        const initialValues: Record<string, any> = {};
+        template.fields.forEach((field: any) => {
+          if (field.value) {
+            initialValues[field.id] = field.value;
+          }
+        });
+        setFormValues(initialValues);
+      } else {
+        // Handle invalid form ID
+        navigate("/forms");
       }
       setIsLoading(false);
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [formId]);
+  }, [formId, navigate]);
 
-  const handleInputChange = (questionId: string, value: any) => {
-    setFormValues(prev => ({
+  const handleInputChange = (fieldId: string, value: any) => {
+    setFormValues((prev) => ({
       ...prev,
-      [questionId]: value
+      [fieldId]: value,
+    }));
+  };
+
+  const handleCheckboxChange = (fieldId: string, checked: boolean) => {
+    setFormValues((prev) => ({
+      ...prev,
+      [fieldId]: checked,
     }));
   };
 
@@ -306,153 +211,44 @@ const FormDetail = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // Validate required fields
+    const requiredFields = formData.fields.filter((field: any) => field.required);
+    const missingFields = requiredFields.filter((field: any) => {
+      const value = formValues[field.id];
+      return value === undefined || value === null || value === "";
+    });
+
+    if (missingFields.length > 0) {
+      toast.error(`Please fill in all required fields: ${missingFields.map((f: any) => f.label).join(", ")}`);
+      setIsSubmitting(false);
+      return;
+    }
+
     // Simulate form submission
     setTimeout(() => {
+      toast.success("Form submitted successfully!");
+      setIsCompleted(true);
       setIsSubmitting(false);
-      setIsComplete(true);
-      
-      // Update the mock data (in a real app, this would be an API call)
-      if (formId) {
-        mockFormData[formId].completed = true;
-        
-        // Find the form in the list and update it
-        const formIndex = mockForms.findIndex(f => f.id === formId);
-        if (formIndex !== -1) {
-          mockForms[formIndex].completed = true;
+
+      // In a real app, you would update the server with the form data
+      if (formData) {
+        const updatedTemplates = { ...formTemplates };
+        if (formId) {
+          updatedTemplates[formId as keyof typeof formTemplates] = {
+            ...formData,
+            completed: true,
+          };
         }
       }
-      
-      toast({
-        title: "Form submitted successfully",
-        description: "Your form has been submitted and marked as complete.",
-        variant: "default",
-      });
-    }, 1000);
+    }, 1500);
+  };
+
+  const handleEdit = () => {
+    setIsCompleted(false);
   };
 
   const handleGoBack = () => {
     navigate("/forms");
-  };
-
-  // Render form question based on its type
-  const renderQuestion = (question: any) => {
-    switch (question.type) {
-      case "text":
-      case "email":
-      case "number":
-        return (
-          <div className="space-y-2" key={question.id}>
-            <Label htmlFor={question.id} className="font-medium">
-              {question.label}
-              {question.required && <span className="text-red-500 ml-1">*</span>}
-            </Label>
-            <Input
-              id={question.id}
-              type={question.type}
-              placeholder={question.placeholder || ""}
-              value={formValues[question.id] || ""}
-              onChange={(e) => handleInputChange(question.id, e.target.value)}
-              disabled={isComplete}
-              required={question.required}
-              className="w-full"
-            />
-          </div>
-        );
-      case "textarea":
-        return (
-          <div className="space-y-2" key={question.id}>
-            <Label htmlFor={question.id} className="font-medium">
-              {question.label}
-              {question.required && <span className="text-red-500 ml-1">*</span>}
-            </Label>
-            <Textarea
-              id={question.id}
-              placeholder={question.placeholder || ""}
-              value={formValues[question.id] || ""}
-              onChange={(e) => handleInputChange(question.id, e.target.value)}
-              disabled={isComplete}
-              required={question.required}
-              className="resize-none min-h-[100px]"
-            />
-          </div>
-        );
-      case "select":
-        return (
-          <div className="space-y-2" key={question.id}>
-            <Label htmlFor={question.id} className="font-medium">
-              {question.label}
-              {question.required && <span className="text-red-500 ml-1">*</span>}
-            </Label>
-            <Select
-              disabled={isComplete}
-              onValueChange={(value) => handleInputChange(question.id, value)}
-              defaultValue={formValues[question.id] || ""}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select an option" />
-              </SelectTrigger>
-              <SelectContent>
-                {question.options?.map((option: string) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        );
-      case "checkbox":
-        return (
-          <div className="space-y-3" key={question.id}>
-            <div className="font-medium">
-              {question.label}
-              {question.required && <span className="text-red-500 ml-1">*</span>}
-            </div>
-            {question.options?.map((option: string) => (
-              <div key={option} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`${question.id}-${option}`}
-                  checked={
-                    formValues[question.id]?.includes(option) || false
-                  }
-                  onCheckedChange={(checked) => {
-                    const currentValues = formValues[question.id] || [];
-                    const newValues = checked
-                      ? [...currentValues, option]
-                      : currentValues.filter((val: string) => val !== option);
-                    handleInputChange(question.id, newValues);
-                  }}
-                  disabled={isComplete}
-                />
-                <Label htmlFor={`${question.id}-${option}`}>{option}</Label>
-              </div>
-            ))}
-          </div>
-        );
-      case "radio":
-        return (
-          <div className="space-y-3" key={question.id}>
-            <div className="font-medium">
-              {question.label}
-              {question.required && <span className="text-red-500 ml-1">*</span>}
-            </div>
-            <RadioGroup
-              value={formValues[question.id] || ""}
-              onValueChange={(value) => handleInputChange(question.id, value)}
-              disabled={isComplete}
-            >
-              {question.options?.map((option: string) => (
-                <div key={option} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option} id={`${question.id}-${option}`} />
-                  <Label htmlFor={`${question.id}-${option}`}>{option}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-        );
-      default:
-        return null;
-    }
   };
 
   if (isLoading) {
@@ -470,7 +266,7 @@ const FormDetail = () => {
     );
   }
 
-  if (!form) {
+  if (!formData) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navigation />
@@ -487,6 +283,15 @@ const FormDetail = () => {
     );
   }
 
+  const formStatus = isCompleted ? "Completed" : formData.type === "active" ? "Active" : formData.type === "upcoming" ? "Upcoming" : "Overdue";
+  const statusColor = isCompleted
+    ? "bg-green-100 text-green-800"
+    : formData.type === "active"
+    ? "bg-blue-100 text-blue-800"
+    : formData.type === "upcoming"
+    ? "bg-amber-100 text-amber-800"
+    : "bg-red-100 text-red-800";
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -502,65 +307,143 @@ const FormDetail = () => {
               <ChevronLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{form.title}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{formData.name}</h1>
               <div className="flex items-center mt-1">
-                <span className="text-sm text-gray-500 mr-4">Due: {form.dueDate}</span>
-                {isComplete ? (
-                  <span className="inline-flex items-center text-sm font-medium text-green-600">
-                    <Check className="mr-1 h-4 w-4" />
-                    Completed
-                  </span>
-                ) : (
-                  <span className="text-sm text-gray-500">Incomplete</span>
-                )}
+                <span className={cn("px-2 py-1 rounded-full text-xs font-medium", statusColor)}>
+                  {formStatus}
+                </span>
               </div>
             </div>
           </div>
           
-          {/* Description */}
-          <div className="bg-white p-6 rounded-lg shadow-sm mb-6 animate-fade-in">
-            <p className="text-gray-700">{form.description}</p>
-          </div>
-          
-          {/* Form */}
-          <div className="bg-white p-6 rounded-lg shadow-sm mb-6 animate-fade-in">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {form.questions.map((question) => (
-                <div key={question.id} className="pb-4 border-b border-gray-100 last:border-0">
-                  {renderQuestion(question)}
+          {/* Form Card */}
+          <Card className="mb-8 animate-fade-in shadow-sm">
+            <CardHeader>
+              <CardTitle>Form Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit}>
+                {formData.fields.map((field: any) => (
+                  <div key={field.id} className="mb-6">
+                    <FormLabel
+                      htmlFor={field.id}
+                      className="mb-2 block text-sm font-medium"
+                    >
+                      {field.label}
+                      {field.required && <span className="ml-1 text-red-500">*</span>}
+                    </FormLabel>
+                    
+                    {field.type === "text" || field.type === "email" || field.type === "tel" || field.type === "number" ? (
+                      <Input
+                        id={field.id}
+                        type={field.type}
+                        value={formValues[field.id] || ""}
+                        onChange={(e) => handleInputChange(field.id, e.target.value)}
+                        required={field.required}
+                        placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
+                        className="w-full"
+                        disabled={isCompleted}
+                      />
+                    ) : field.type === "textarea" ? (
+                      <Textarea
+                        id={field.id}
+                        value={formValues[field.id] || ""}
+                        onChange={(e) => handleInputChange(field.id, e.target.value)}
+                        required={field.required}
+                        placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
+                        className="w-full min-h-[120px]"
+                        disabled={isCompleted}
+                      />
+                    ) : field.type === "checkbox" ? (
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={field.id}
+                          checked={formValues[field.id] || false}
+                          onCheckedChange={(checked) =>
+                            handleCheckboxChange(
+                              field.id,
+                              checked === "indeterminate" ? false : checked
+                            )
+                          }
+                          disabled={isCompleted}
+                        />
+                        <label
+                          htmlFor={field.id}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {field.checkboxLabel || field.label}
+                        </label>
+                      </div>
+                    ) : field.type === "radio" ? (
+                      <RadioGroup
+                        value={formValues[field.id] || ""}
+                        onValueChange={(value) => handleInputChange(field.id, value)}
+                        disabled={isCompleted}
+                      >
+                        <div className="space-y-2">
+                          {field.options.map((option: string) => (
+                            <div key={option} className="flex items-center space-x-2">
+                              <RadioGroupItem value={option} id={`${field.id}-${option}`} />
+                              <label htmlFor={`${field.id}-${option}`} className="text-sm">
+                                {option}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </RadioGroup>
+                    ) : field.type === "select" ? (
+                      <Select 
+                        value={formValues[field.id] || ""}
+                        onValueChange={(value) => handleInputChange(field.id, value)}
+                        disabled={isCompleted}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {field.options.map((option: string) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : null}
+                  </div>
+                ))}
+
+                <div className="mt-8 flex justify-end">
+                  {isCompleted ? (
+                    <Button type="button" onClick={handleEdit}>
+                      Edit Response
+                    </Button>
+                  ) : (
+                    <Button 
+                      type="submit" 
+                      disabled={isSubmitting || formData.type === "upcoming" || formData.type === "overdue"}
+                      className="flex items-center"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Submitting...
+                        </>
+                      ) : (
+                        "Submit Form"
+                      )}
+                    </Button>
+                  )}
                 </div>
-              ))}
-              
-              {!isComplete && (
-                <div className="pt-4">
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full md:w-auto"
-                  >
-                    {isSubmitting ? (
-                      <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Submitting...
-                      </span>
-                    ) : (
-                      <span className="flex items-center">
-                        <Save className="mr-2 h-4 w-4" />
-                        Submit Form
-                      </span>
-                    )}
-                  </Button>
-                </div>
-              )}
-            </form>
-          </div>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default FormDetail;
