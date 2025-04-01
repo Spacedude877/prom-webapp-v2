@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
@@ -18,8 +17,6 @@ type CarouselProps = {
   plugins?: CarouselPlugin
   orientation?: "horizontal" | "vertical"
   setApi?: (api: CarouselApi) => void
-  selectedIndex?: number
-  setSelectedIndex?: (index: number) => void
 }
 
 type CarouselContextProps = {
@@ -29,8 +26,6 @@ type CarouselContextProps = {
   scrollNext: () => void
   canScrollPrev: boolean
   canScrollNext: boolean
-  selectedIndex?: number
-  setSelectedIndex?: (index: number) => void
 } & CarouselProps
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null)
@@ -57,8 +52,6 @@ const Carousel = React.forwardRef<
       plugins,
       className,
       children,
-      selectedIndex,
-      setSelectedIndex,
       ...props
     },
     ref
@@ -73,25 +66,14 @@ const Carousel = React.forwardRef<
     const [canScrollPrev, setCanScrollPrev] = React.useState(false)
     const [canScrollNext, setCanScrollNext] = React.useState(false)
 
-    // Handle external control of the carousel
-    React.useEffect(() => {
-      if (api && selectedIndex !== undefined) {
-        api.scrollTo(selectedIndex)
-      }
-    }, [api, selectedIndex])
-
     const onSelect = React.useCallback((api: CarouselApi) => {
       if (!api) {
         return
       }
 
-      if (setSelectedIndex) {
-        setSelectedIndex(api.selectedScrollSnap())
-      }
-
       setCanScrollPrev(api.canScrollPrev())
       setCanScrollNext(api.canScrollNext())
-    }, [setSelectedIndex])
+    }, [])
 
     const scrollPrev = React.useCallback(() => {
       api?.scrollPrev()
@@ -148,8 +130,6 @@ const Carousel = React.forwardRef<
           scrollNext,
           canScrollPrev,
           canScrollNext,
-          selectedIndex,
-          setSelectedIndex,
         }}
       >
         <div
@@ -224,7 +204,7 @@ const CarouselPrevious = React.forwardRef<
       variant={variant}
       size={size}
       className={cn(
-        "absolute h-8 w-8 rounded-full",
+        "absolute  h-8 w-8 rounded-full",
         orientation === "horizontal"
           ? "-left-12 top-1/2 -translate-y-1/2"
           : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
