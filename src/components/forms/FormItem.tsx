@@ -1,6 +1,6 @@
 
 import { useNavigate } from "react-router-dom";
-import { Calendar } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FormItemType } from "@/types/forms";
 
@@ -17,15 +17,25 @@ const FormItem = ({ item }: FormItemProps) => {
   
   return (
     <div 
-      className="bg-white rounded-md p-4 mb-2 border border-gray-200 hover:border-gray-300 cursor-pointer"
+      className={cn(
+        "bg-white rounded-md p-4 mb-2 border hover:border-gray-300 cursor-pointer transition-all duration-300",
+        item.completed 
+          ? "border-green-300 bg-green-50/50 hover:border-green-400" 
+          : "border-gray-200"
+      )}
       onClick={handleClick}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center">
-          <div className="w-5 h-5 mr-3">
-            <div className="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center">
+          <div className="w-5 h-5 mr-3 relative">
+            <div className={cn(
+              "w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center",
+              item.completed && "border-green-500"
+            )}>
               {item.completed && (
-                <div className="w-3 h-3 rounded-full bg-form-complete"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Check className="w-4 h-4 text-green-500" strokeWidth={3} />
+                </div>
               )}
             </div>
           </div>
