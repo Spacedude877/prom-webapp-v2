@@ -14,14 +14,14 @@ export interface FormQuestion {
   placeholder?: string;
   required: boolean;
   options?: string[]; // For select, radio, checkbox
-  value?: string;
+  value?: string | string[]; // Modified to handle both single values and arrays for checkboxes
   checkboxLabel?: string;
 }
 
 export interface FormData {
   id: string;
   name: string;
-  title?: string; // Make title optional
+  title?: string; // Title is optional
   description: string;
   questions: FormQuestion[];
   completed: boolean;

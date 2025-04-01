@@ -361,6 +361,30 @@ function FormDetail() {
                                 {question.checkboxLabel || question.label}
                               </div>
                             </div>
+                          ) : question.type === "checkbox" && question.options ? (
+                            <div className="space-y-2">
+                              {question.options.map((option) => (
+                                <div key={option} className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value?.includes?.(option)}
+                                      onCheckedChange={(checked) => {
+                                        const currentValues = Array.isArray(field.value) ? field.value : [];
+                                        if (checked) {
+                                          field.onChange([...currentValues, option]);
+                                        } else {
+                                          field.onChange(currentValues.filter(val => val !== option));
+                                        }
+                                      }}
+                                      disabled={isCompleted}
+                                    />
+                                  </FormControl>
+                                  <div className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    {option}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           ) : question.type === "radio" ? (
                             <FormControl>
                               <RadioGroup
