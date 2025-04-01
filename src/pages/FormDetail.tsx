@@ -23,7 +23,6 @@ import Navigation from "@/components/layout/Navigation";
 import { ChevronLeft } from "lucide-react";
 import { FormData, FormQuestion } from "@/types/forms";
 
-// Sample form templates for demonstration
 const formTemplates: Record<string, FormData> = {
   "form-1": {
     id: "form-1",
@@ -184,21 +183,17 @@ function FormDetail() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Set up the form
   const form = useForm({
     defaultValues: {},
   });
 
   useEffect(() => {
-    // Simulate API fetch with a small delay
     const timer = setTimeout(() => {
-      // In a real app, you would fetch the form data from an API
       if (formId && formTemplates[formId as keyof typeof formTemplates]) {
         const template = formTemplates[formId as keyof typeof formTemplates] as FormData;
         setFormData(template);
         setIsCompleted(template.completed || false);
         
-        // Initialize form values from template
         const initialValues: Record<string, any> = {};
         template.questions.forEach((field) => {
           if (field.value) {
@@ -207,7 +202,6 @@ function FormDetail() {
         });
         form.reset(initialValues);
       } else {
-        // Handle invalid form ID
         navigate("/forms");
       }
       setIsLoading(false);
@@ -219,13 +213,11 @@ function FormDetail() {
   const onSubmit = (values: Record<string, any>) => {
     setIsSubmitting(true);
 
-    // Simulate form submission
     setTimeout(() => {
       toast.success("Form submitted successfully!");
       setIsCompleted(true);
       setIsSubmitting(false);
 
-      // In a real app, you would update the server with the form data
       if (formData) {
         const updatedTemplates = { ...formTemplates };
         if (formId) {
@@ -300,7 +292,6 @@ function FormDetail() {
       <Navigation />
       <div className="container mx-auto px-6 pt-24 pb-16">
         <div className="max-w-3xl mx-auto">
-          {/* Header */}
           <div className="flex items-center mb-6 animate-fade-in">
             <Button 
               onClick={handleGoBack} 
@@ -319,7 +310,6 @@ function FormDetail() {
             </div>
           </div>
           
-          {/* Form Card */}
           <Card className="mb-8 animate-fade-in shadow-sm">
             <CardHeader>
               <CardTitle>Form Details</CardTitle>
