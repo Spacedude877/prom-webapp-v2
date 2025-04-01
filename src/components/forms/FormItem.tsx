@@ -1,6 +1,6 @@
 
 import { useNavigate } from "react-router-dom";
-import { Check, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FormItemType } from "@/types/forms";
 
@@ -17,27 +17,31 @@ const FormItem = ({ item }: FormItemProps) => {
   
   return (
     <div 
-      className={cn(
-        "form-item p-4 bg-white rounded-md cursor-pointer border",
-        item.completed 
-          ? "form-item-completed border-gray-200" 
-          : "hover:border-gray-300 border-gray-200",
-      )}
+      className="bg-white rounded-md p-4 mb-2 border border-gray-200 hover:border-gray-300 cursor-pointer"
       onClick={handleClick}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className={cn(
-            "flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center",
-            item.completed ? "bg-form-complete text-white" : "border border-gray-300"
-          )}>
-            {item.completed && <Check className="w-3 h-3" />}
+        <div className="flex items-center">
+          <div className="w-5 h-5 mr-3">
+            <div className="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center">
+              {item.completed && (
+                <div className="w-3 h-3 rounded-full bg-form-complete"></div>
+              )}
+            </div>
           </div>
-          <span className="font-medium text-gray-900">{item.title}</span>
+          <div>
+            <div className="font-medium">{item.title}</div>
+            <div className="text-sm text-gray-500">Due: {item.dueDate}</div>
+          </div>
         </div>
-        <div className="flex items-center text-sm text-gray-500">
-          <Calendar className="w-4 h-4 mr-1" />
-          <span>{item.dueDate}</span>
+        <div>
+          {item.completed ? (
+            <span className="text-form-complete font-medium text-sm">Completed</span>
+          ) : item.type === "overdue" ? (
+            <span className="bg-red-50 text-red-600 text-xs font-medium px-2 py-1 rounded-md">Overdue</span>
+          ) : (
+            <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded-md">In Progress</span>
+          )}
         </div>
       </div>
     </div>
