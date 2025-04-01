@@ -25,10 +25,11 @@ import { ChevronLeft } from "lucide-react";
 import { FormData } from "@/types/forms";
 
 // Sample form templates for demonstration
-const formTemplates = {
+const formTemplates: Record<string, FormData> = {
   "form-1": {
     id: "form-1",
     name: "Student Formal Registration",
+    title: "Student Formal Registration",
     description: "Registration form for student formal event",
     type: "active",
     completed: true,
@@ -67,6 +68,7 @@ const formTemplates = {
   "form-2": {
     id: "form-2",
     name: "Table Booking Form",
+    title: "Table Booking Form",
     description: "Book a table for the event",
     type: "active",
     completed: false,
@@ -93,6 +95,7 @@ const formTemplates = {
   "form-3": {
     id: "form-3",
     name: "Feedback Form",
+    title: "Feedback Form",
     description: "Share your feedback about the event",
     type: "upcoming",
     completed: false,
@@ -106,6 +109,7 @@ const formTemplates = {
   "form-4": {
     id: "form-4",
     name: "Travel Arrangements",
+    title: "Travel Arrangements",
     description: "Arrange your travel for the event",
     type: "upcoming",
     completed: false,
@@ -120,6 +124,7 @@ const formTemplates = {
   "form-5": {
     id: "form-5",
     name: "Budget Approval",
+    title: "Budget Approval",
     description: "Request budget approval for the event",
     type: "overdue",
     completed: false,
@@ -146,6 +151,7 @@ const formTemplates = {
   "form-6": {
     id: "form-6",
     name: "Feedback Survey",
+    title: "Feedback Survey",
     description: "Post-event feedback survey",
     type: "overdue",
     completed: false,
@@ -194,8 +200,8 @@ function FormDetail() {
     // Simulate API fetch with a small delay
     const timer = setTimeout(() => {
       // In a real app, you would fetch the form data from an API
-      if (formId && formTemplates[formId as keyof typeof formTemplates]) {
-        const template = formTemplates[formId as keyof typeof formTemplates] as FormData;
+      if (formId && formTemplates[formId]) {
+        const template = formTemplates[formId];
         setFormData(template);
         setIsCompleted(template.completed || false);
         
@@ -227,14 +233,12 @@ function FormDetail() {
       setIsSubmitting(false);
 
       // In a real app, you would update the server with the form data
-      if (formData) {
+      if (formData && formId) {
         const updatedTemplates = { ...formTemplates };
-        if (formId) {
-          updatedTemplates[formId as keyof typeof formTemplates] = {
-            ...formData,
-            completed: true,
-          };
-        }
+        updatedTemplates[formId] = {
+          ...formData,
+          completed: true,
+        };
       }
     }, 1500);
   };
@@ -332,7 +336,7 @@ function FormDetail() {
                             {question.required && <span className="ml-1 text-red-500">*</span>}
                           </FormLabel>
                           
-                          {question.type === "text" || question.type === "email" || question.type === "tel" || question.type === "number" ? (
+                          {(question.type === "text" || question.type === "email" || question.type === "number") ? (
                             <FormControl>
                               <Input
                                 type={question.type}
