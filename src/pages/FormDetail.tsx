@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navigation from "@/components/layout/Navigation";
 import { ChevronLeft } from "lucide-react";
-import { FormData } from "@/types/forms";
+import { FormData, FormQuestion } from "@/types/forms";
 
 // Sample form templates for demonstration
 const formTemplates: Record<string, FormData> = {
@@ -336,6 +336,7 @@ function FormDetail() {
                             {question.required && <span className="ml-1 text-red-500">*</span>}
                           </FormLabel>
                           
+                          {/* Fix for the type error - correct type checking for form elements */}
                           {(question.type === "text" || question.type === "email" || question.type === "number") ? (
                             <FormControl>
                               <Input
