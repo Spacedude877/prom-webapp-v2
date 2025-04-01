@@ -49,9 +49,9 @@ const Navigation = () => {
           <div className="flex items-center">
             <Link 
               to="/" 
-              className="text-xl font-semibold text-form-active tracking-tight mr-8"
+              className="text-xl font-semibold text-[#1A1F2C] tracking-tight mr-8"
             >
-              FormFlow
+              HKIS Prom
             </Link>
             
             {/* Desktop Navigation */}
@@ -61,9 +61,9 @@ const Navigation = () => {
                   key={item.name}
                   to={item.path}
                   className={cn(
-                    "text-sm font-medium transition-colors hover:text-form-active",
+                    "text-sm font-medium transition-colors hover:text-[#7E69AB]",
                     location.pathname === item.path
-                      ? "text-form-active"
+                      ? "text-[#7E69AB]"
                       : "text-gray-600"
                   )}
                 >
@@ -77,7 +77,7 @@ const Navigation = () => {
           <div className="hidden md:flex">
             <Link
               to="/login"
-              className="text-sm font-medium text-gray-600 hover:text-form-active transition-colors"
+              className="text-sm font-medium text-gray-600 hover:text-[#7E69AB] transition-colors"
             >
               Login
             </Link>
@@ -90,9 +90,9 @@ const Navigation = () => {
               className="p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {mobileMenuOpen ? (
-                <X className="h-6 w-6 text-form-active" />
+                <X className="h-6 w-6 text-[#1A1F2C]" />
               ) : (
-                <Menu className="h-6 w-6 text-form-active" />
+                <Menu className="h-6 w-6 text-[#1A1F2C]" />
               )}
             </button>
           </div>
@@ -109,7 +109,7 @@ const Navigation = () => {
                   className={cn(
                     "text-sm font-medium transition-colors px-3 py-2 rounded-md",
                     location.pathname === item.path
-                      ? "bg-gray-50 text-form-active"
+                      ? "bg-gray-50 text-[#7E69AB]"
                       : "text-gray-600 hover:bg-gray-50"
                   )}
                 >
