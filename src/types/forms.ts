@@ -21,10 +21,11 @@ export interface FormQuestion {
 export interface FormData {
   id: string;
   title: string;
-  name: string; // Making this required
   description: string;
   questions: FormQuestion[];
   completed: boolean;
   dueDate: string;
-  type: 'active' | 'upcoming' | 'overdue'; // Making this required
+  name?: string;
+  type?: 'active' | 'upcoming' | 'overdue';
+  fields?: FormQuestion[];
 }

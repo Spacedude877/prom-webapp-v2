@@ -22,14 +22,13 @@ import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navigation from "@/components/layout/Navigation";
 import { ChevronLeft } from "lucide-react";
-import { FormData, FormQuestion } from "@/types/forms";
+import { FormData } from "@/types/forms";
 
 // Sample form templates for demonstration
-const formTemplates: Record<string, FormData> = {
+const formTemplates = {
   "form-1": {
     id: "form-1",
     name: "Student Formal Registration",
-    title: "Student Formal Registration",
     description: "Registration form for student formal event",
     type: "active",
     completed: true,
@@ -68,7 +67,6 @@ const formTemplates: Record<string, FormData> = {
   "form-2": {
     id: "form-2",
     name: "Table Booking Form",
-    title: "Table Booking Form",
     description: "Book a table for the event",
     type: "active",
     completed: false,
@@ -95,7 +93,6 @@ const formTemplates: Record<string, FormData> = {
   "form-3": {
     id: "form-3",
     name: "Feedback Form",
-    title: "Feedback Form",
     description: "Share your feedback about the event",
     type: "upcoming",
     completed: false,
@@ -109,7 +106,6 @@ const formTemplates: Record<string, FormData> = {
   "form-4": {
     id: "form-4",
     name: "Travel Arrangements",
-    title: "Travel Arrangements",
     description: "Arrange your travel for the event",
     type: "upcoming",
     completed: false,
@@ -124,7 +120,6 @@ const formTemplates: Record<string, FormData> = {
   "form-5": {
     id: "form-5",
     name: "Budget Approval",
-    title: "Budget Approval",
     description: "Request budget approval for the event",
     type: "overdue",
     completed: false,
@@ -151,7 +146,6 @@ const formTemplates: Record<string, FormData> = {
   "form-6": {
     id: "form-6",
     name: "Feedback Survey",
-    title: "Feedback Survey",
     description: "Post-event feedback survey",
     type: "overdue",
     completed: false,
@@ -200,8 +194,8 @@ function FormDetail() {
     // Simulate API fetch with a small delay
     const timer = setTimeout(() => {
       // In a real app, you would fetch the form data from an API
-      if (formId && formTemplates[formId]) {
-        const template = formTemplates[formId];
+      if (formId && formTemplates[formId as keyof typeof formTemplates]) {
+        const template = formTemplates[formId as keyof typeof formTemplates] as FormData;
         setFormData(template);
         setIsCompleted(template.completed || false);
         
@@ -233,12 +227,14 @@ function FormDetail() {
       setIsSubmitting(false);
 
       // In a real app, you would update the server with the form data
-      if (formData && formId) {
+      if (formData) {
         const updatedTemplates = { ...formTemplates };
-        updatedTemplates[formId] = {
-          ...formData,
-          completed: true,
-        };
+        if (formId) {
+          updatedTemplates[formId as keyof typeof formTemplates] = {
+            ...formData,
+            completed: true,
+          };
+        }
       }
     }, 1500);
   };
@@ -292,13 +288,6 @@ function FormDetail() {
     ? "bg-amber-100 text-amber-800"
     : "bg-red-100 text-red-800";
 
-  // Helper function to determine input type
-  const getInputType = (questionType: FormQuestion['type']): React.InputHTMLAttributes<HTMLInputElement>['type'] => {
-    if (questionType === "email") return "email";
-    if (questionType === "number") return "number";
-    return "text";
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -343,11 +332,10 @@ function FormDetail() {
                             {question.required && <span className="ml-1 text-red-500">*</span>}
                           </FormLabel>
                           
-                          {/* Fix for the type error - correct type checking for form elements */}
-                          {(question.type === "text" || question.type === "email" || question.type === "number") ? (
+                          {question.type === "text" || question.type === "email" || question.type === "tel" || question.type === "number" ? (
                             <FormControl>
                               <Input
-                                type={getInputType(question.type)}
+                                type={question.type}
                                 placeholder={question.placeholder || `Enter ${question.label.toLowerCase()}`}
                                 disabled={isCompleted}
                                 {...field}
