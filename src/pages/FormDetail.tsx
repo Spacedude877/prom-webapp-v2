@@ -175,6 +175,14 @@ const formTemplates: Record<string, FormData> = {
   },
 };
 
+const getInputType = (questionType: FormQuestion['type']): React.HTMLInputTypeAttribute | undefined => {
+  if (questionType === "text" || questionType === "email" || 
+      questionType === "tel" || questionType === "number") {
+    return questionType;
+  }
+  return undefined;
+};
+
 function FormDetail() {
   const { formId } = useParams();
   const navigate = useNavigate();
@@ -278,14 +286,6 @@ function FormDetail() {
     : formData.type === "upcoming"
     ? "bg-amber-100 text-amber-800"
     : "bg-red-100 text-red-800";
-
-  const getInputType = (questionType: FormQuestion['type']) => {
-    if (questionType === "text" || questionType === "email" || 
-        questionType === "tel" || questionType === "number") {
-      return questionType;
-    }
-    return undefined;
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">

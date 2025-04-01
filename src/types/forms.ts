@@ -20,8 +20,8 @@ export interface FormQuestion {
 
 export interface FormData {
   id: string;
-  title: string;
   name: string;
+  title?: string; // Make title optional
   description: string;
   questions: FormQuestion[];
   completed: boolean;
