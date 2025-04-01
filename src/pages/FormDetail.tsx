@@ -292,6 +292,13 @@ function FormDetail() {
     ? "bg-amber-100 text-amber-800"
     : "bg-red-100 text-red-800";
 
+  // Helper function to determine input type
+  const getInputType = (questionType: FormQuestion['type']): React.InputHTMLAttributes<HTMLInputElement>['type'] => {
+    if (questionType === "email") return "email";
+    if (questionType === "number") return "number";
+    return "text";
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -340,7 +347,7 @@ function FormDetail() {
                           {(question.type === "text" || question.type === "email" || question.type === "number") ? (
                             <FormControl>
                               <Input
-                                type={question.type}
+                                type={getInputType(question.type)}
                                 placeholder={question.placeholder || `Enter ${question.label.toLowerCase()}`}
                                 disabled={isCompleted}
                                 {...field}
