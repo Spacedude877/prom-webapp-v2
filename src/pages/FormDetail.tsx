@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -22,10 +21,10 @@ import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navigation from "@/components/layout/Navigation";
 import { ChevronLeft } from "lucide-react";
-import { FormData } from "@/types/forms";
+import { FormData, FormQuestion } from "@/types/forms";
 
 // Sample form templates for demonstration
-const formTemplates = {
+const formTemplates: Record<string, FormData> = {
   "form-1": {
     id: "form-1",
     name: "Student Formal Registration",
@@ -288,6 +287,14 @@ function FormDetail() {
     ? "bg-amber-100 text-amber-800"
     : "bg-red-100 text-red-800";
 
+  const getInputType = (questionType: FormQuestion['type']) => {
+    if (questionType === "text" || questionType === "email" || 
+        questionType === "tel" || questionType === "number") {
+      return questionType;
+    }
+    return undefined;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -332,10 +339,11 @@ function FormDetail() {
                             {question.required && <span className="ml-1 text-red-500">*</span>}
                           </FormLabel>
                           
-                          {question.type === "text" || question.type === "email" || question.type === "tel" || question.type === "number" ? (
+                          {(question.type === "text" || question.type === "email" || 
+                           question.type === "tel" || question.type === "number") ? (
                             <FormControl>
                               <Input
-                                type={question.type}
+                                type={getInputType(question.type)}
                                 placeholder={question.placeholder || `Enter ${question.label.toLowerCase()}`}
                                 disabled={isCompleted}
                                 {...field}

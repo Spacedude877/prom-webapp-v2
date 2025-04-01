@@ -9,7 +9,7 @@ export interface FormItemType {
 
 export interface FormQuestion {
   id: string;
-  type: 'text' | 'number' | 'email' | 'select' | 'checkbox' | 'radio' | 'textarea';
+  type: 'text' | 'number' | 'email' | 'select' | 'checkbox' | 'radio' | 'textarea' | 'tel';
   label: string;
   placeholder?: string;
   required: boolean;
@@ -21,11 +21,10 @@ export interface FormQuestion {
 export interface FormData {
   id: string;
   title: string;
+  name: string;
   description: string;
   questions: FormQuestion[];
   completed: boolean;
   dueDate: string;
-  name?: string;
-  type?: 'active' | 'upcoming' | 'overdue';
-  fields?: FormQuestion[];
+  type: 'active' | 'upcoming' | 'overdue';
 }
