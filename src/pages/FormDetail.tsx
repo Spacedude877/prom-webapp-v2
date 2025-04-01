@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
@@ -22,18 +21,14 @@ import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navigation from "@/components/layout/Navigation";
 import { ChevronLeft } from "lucide-react";
-import { FormData } from "@/types/forms";
 
 // Sample form templates for demonstration
 const formTemplates = {
   "form-1": {
-    id: "form-1",
     name: "Student Formal Registration",
-    description: "Registration form for student formal event",
     type: "active",
     completed: true,
-    dueDate: "2023-06-15",
-    questions: [
+    fields: [
       { id: "firstname", type: "text", label: "First Name", required: true, value: "Jane" },
       { id: "surname", type: "text", label: "Surname", required: true, value: "Doe" },
       { id: "student-number", type: "text", label: "Student Number", required: true, value: "S12345" },
@@ -65,13 +60,10 @@ const formTemplates = {
     ],
   },
   "form-2": {
-    id: "form-2",
     name: "Table Booking Form",
-    description: "Book a table for the event",
     type: "active",
     completed: false,
-    dueDate: "2023-06-20",
-    questions: [
+    fields: [
       { 
         id: "party-size", 
         type: "select", 
@@ -86,31 +78,25 @@ const formTemplates = {
         required: true,
         placeholder: "Please list the full names of all members in your party"
       },
-      { id: "accessibility", type: "checkbox", label: "Accessibility Requirements", required: false, checkboxLabel: "I require accessibility accommodations" },
+      { id: "accessibility", type: "checkbox", label: "Accessibility Requirements", required: false },
       { id: "additional-notes", type: "textarea", label: "Additional Notes", required: false },
     ],
   },
   "form-3": {
-    id: "form-3",
     name: "Feedback Form",
-    description: "Share your feedback about the event",
     type: "upcoming",
     completed: false,
-    dueDate: "2023-07-10",
-    questions: [
+    fields: [
       { id: "rating", type: "radio", label: "Overall Experience", options: ["Excellent", "Good", "Average", "Poor"], required: true },
       { id: "feedback", type: "textarea", label: "Your Feedback", required: true },
       { id: "contact-permission", type: "checkbox", label: "May we contact you about your feedback?", required: false },
     ],
   },
   "form-4": {
-    id: "form-4",
     name: "Travel Arrangements",
-    description: "Arrange your travel for the event",
     type: "upcoming",
     completed: false,
-    dueDate: "2023-07-20",
-    questions: [
+    fields: [
       { id: "travel-method", type: "radio", label: "Travel Method", options: ["Driving", "Flying", "Train", "Other"], required: true },
       { id: "arrival-date", type: "text", label: "Arrival Date", placeholder: "MM/DD/YYYY", required: true },
       { id: "departure-date", type: "text", label: "Departure Date", placeholder: "MM/DD/YYYY", required: true },
@@ -118,13 +104,10 @@ const formTemplates = {
     ],
   },
   "form-5": {
-    id: "form-5",
     name: "Budget Approval",
-    description: "Request budget approval for the event",
     type: "overdue",
     completed: false,
-    dueDate: "2023-05-20",
-    questions: [
+    fields: [
       { id: "budget-amount", type: "number", label: "Budget Amount", placeholder: "Enter budget amount", required: true },
       { 
         id: "budget-category", 
@@ -144,13 +127,10 @@ const formTemplates = {
     ],
   },
   "form-6": {
-    id: "form-6",
     name: "Feedback Survey",
-    description: "Post-event feedback survey",
     type: "overdue",
     completed: false,
-    dueDate: "2023-05-30",
-    questions: [
+    fields: [
       { 
         id: "overall-experience", 
         type: "radio", 
@@ -180,33 +160,29 @@ const formTemplates = {
 function FormDetail() {
   const { formId } = useParams();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<FormData | null>(null);
+  const [formData, setFormData] = useState<any>(null);
+  const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [isCompleted, setIsCompleted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Set up the form
-  const form = useForm({
-    defaultValues: {},
-  });
 
   useEffect(() => {
     // Simulate API fetch with a small delay
     const timer = setTimeout(() => {
       // In a real app, you would fetch the form data from an API
       if (formId && formTemplates[formId as keyof typeof formTemplates]) {
-        const template = formTemplates[formId as keyof typeof formTemplates] as FormData;
+        const template = formTemplates[formId as keyof typeof formTemplates];
         setFormData(template);
         setIsCompleted(template.completed || false);
         
         // Initialize form values from template
         const initialValues: Record<string, any> = {};
-        template.questions.forEach((field) => {
+        template.fields.forEach((field: any) => {
           if (field.value) {
             initialValues[field.id] = field.value;
           }
         });
-        form.reset(initialValues);
+        setFormValues(initialValues);
       } else {
         // Handle invalid form ID
         navigate("/forms");
@@ -215,10 +191,38 @@ function FormDetail() {
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [formId, navigate, form]);
+  }, [formId, navigate]);
 
-  const onSubmit = (values: Record<string, any>) => {
+  const handleInputChange = (fieldId: string, value: any) => {
+    setFormValues((prev) => ({
+      ...prev,
+      [fieldId]: value,
+    }));
+  };
+
+  const handleCheckboxChange = (fieldId: string, checked: boolean) => {
+    setFormValues((prev) => ({
+      ...prev,
+      [fieldId]: checked,
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
+
+    // Validate required fields
+    const requiredFields = formData.fields.filter((field: any) => field.required);
+    const missingFields = requiredFields.filter((field: any) => {
+      const value = formValues[field.id];
+      return value === undefined || value === null || value === "";
+    });
+
+    if (missingFields.length > 0) {
+      toast.error(`Please fill in all required fields: ${missingFields.map((f: any) => f.label).join(", ")}`);
+      setIsSubmitting(false);
+      return;
+    }
 
     // Simulate form submission
     setTimeout(() => {
@@ -318,123 +322,122 @@ function FormDetail() {
               <CardTitle>Form Details</CardTitle>
             </CardHeader>
             <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  {formData.questions.map((question) => (
-                    <FormField
-                      key={question.id}
-                      control={form.control}
-                      name={question.id}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            {question.label}
-                            {question.required && <span className="ml-1 text-red-500">*</span>}
-                          </FormLabel>
-                          
-                          {question.type === "text" || question.type === "email" || question.type === "tel" || question.type === "number" ? (
-                            <FormControl>
-                              <Input
-                                type={question.type}
-                                placeholder={question.placeholder || `Enter ${question.label.toLowerCase()}`}
-                                disabled={isCompleted}
-                                {...field}
-                              />
-                            </FormControl>
-                          ) : question.type === "textarea" ? (
-                            <FormControl>
-                              <Textarea
-                                placeholder={question.placeholder || `Enter ${question.label.toLowerCase()}`}
-                                className="min-h-[120px]"
-                                disabled={isCompleted}
-                                {...field}
-                              />
-                            </FormControl>
-                          ) : question.type === "checkbox" && !question.options ? (
-                            <div className="flex items-center space-x-2">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  disabled={isCompleted}
-                                />
-                              </FormControl>
-                              <div className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                {question.checkboxLabel || question.label}
-                              </div>
-                            </div>
-                          ) : question.type === "radio" ? (
-                            <FormControl>
-                              <RadioGroup
-                                onValueChange={field.onChange}
-                                value={field.value}
-                                disabled={isCompleted}
-                                className="space-y-2"
-                              >
-                                {question.options?.map((option) => (
-                                  <div key={option} className="flex items-center space-x-2">
-                                    <RadioGroupItem value={option} id={`${question.id}-${option}`} />
-                                    <label htmlFor={`${question.id}-${option}`} className="text-sm">
-                                      {option}
-                                    </label>
-                                  </div>
-                                ))}
-                              </RadioGroup>
-                            </FormControl>
-                          ) : question.type === "select" ? (
-                            <FormControl>
-                              <Select
-                                onValueChange={field.onChange}
-                                value={field.value}
-                                disabled={isCompleted}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder={`Select ${question.label.toLowerCase()}`} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {question.options?.map((option) => (
-                                    <SelectItem key={option} value={option}>
-                                      {option}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                          ) : null}
-                          
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ))}
-
-                  <div className="mt-8 flex justify-end">
-                    {isCompleted ? (
-                      <Button type="button" onClick={handleEdit}>
-                        Edit Response
-                      </Button>
-                    ) : (
-                      <Button 
-                        type="submit" 
-                        disabled={isSubmitting || formData.type === "upcoming" || formData.type === "overdue"}
-                        className="flex items-center"
+              <form onSubmit={handleSubmit}>
+                {formData.fields.map((field: any) => (
+                  <div key={field.id} className="mb-6">
+                    <FormLabel
+                      htmlFor={field.id}
+                      className="mb-2 block text-sm font-medium"
+                    >
+                      {field.label}
+                      {field.required && <span className="ml-1 text-red-500">*</span>}
+                    </FormLabel>
+                    
+                    {field.type === "text" || field.type === "email" || field.type === "tel" || field.type === "number" ? (
+                      <Input
+                        id={field.id}
+                        type={field.type}
+                        value={formValues[field.id] || ""}
+                        onChange={(e) => handleInputChange(field.id, e.target.value)}
+                        required={field.required}
+                        placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
+                        className="w-full"
+                        disabled={isCompleted}
+                      />
+                    ) : field.type === "textarea" ? (
+                      <Textarea
+                        id={field.id}
+                        value={formValues[field.id] || ""}
+                        onChange={(e) => handleInputChange(field.id, e.target.value)}
+                        required={field.required}
+                        placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
+                        className="w-full min-h-[120px]"
+                        disabled={isCompleted}
+                      />
+                    ) : field.type === "checkbox" ? (
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={field.id}
+                          checked={formValues[field.id] || false}
+                          onCheckedChange={(checked) =>
+                            handleCheckboxChange(
+                              field.id,
+                              checked === "indeterminate" ? false : checked
+                            )
+                          }
+                          disabled={isCompleted}
+                        />
+                        <label
+                          htmlFor={field.id}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {field.checkboxLabel || field.label}
+                        </label>
+                      </div>
+                    ) : field.type === "radio" ? (
+                      <RadioGroup
+                        value={formValues[field.id] || ""}
+                        onValueChange={(value) => handleInputChange(field.id, value)}
+                        disabled={isCompleted}
                       >
-                        {isSubmitting ? (
-                          <>
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Submitting...
-                          </>
-                        ) : (
-                          "Submit Form"
-                        )}
-                      </Button>
-                    )}
+                        <div className="space-y-2">
+                          {field.options.map((option: string) => (
+                            <div key={option} className="flex items-center space-x-2">
+                              <RadioGroupItem value={option} id={`${field.id}-${option}`} />
+                              <label htmlFor={`${field.id}-${option}`} className="text-sm">
+                                {option}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </RadioGroup>
+                    ) : field.type === "select" ? (
+                      <Select 
+                        value={formValues[field.id] || ""}
+                        onValueChange={(value) => handleInputChange(field.id, value)}
+                        disabled={isCompleted}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {field.options.map((option: string) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : null}
                   </div>
-                </form>
-              </Form>
+                ))}
+
+                <div className="mt-8 flex justify-end">
+                  {isCompleted ? (
+                    <Button type="button" onClick={handleEdit}>
+                      Edit Response
+                    </Button>
+                  ) : (
+                    <Button 
+                      type="submit" 
+                      disabled={isSubmitting || formData.type === "upcoming" || formData.type === "overdue"}
+                      className="flex items-center"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Submitting...
+                        </>
+                      ) : (
+                        "Submit Form"
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </form>
             </CardContent>
           </Card>
         </div>
