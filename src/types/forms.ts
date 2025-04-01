@@ -28,3 +28,8 @@ export interface FormData {
   dueDate: string;
   type: 'active' | 'upcoming' | 'overdue';
 }
+
+// Add FormValues interface for form handling
+export interface FormValues {
+  [key: string]: string | string[] | boolean;
+}

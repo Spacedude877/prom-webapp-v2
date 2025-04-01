@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -21,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navigation from "@/components/layout/Navigation";
 import { ChevronLeft } from "lucide-react";
-import { FormData, FormQuestion } from "@/types/forms";
+import { FormData, FormQuestion, FormValues } from "@/types/forms";
 
 const formTemplates: Record<string, FormData> = {
   "form-1": {
@@ -191,7 +192,8 @@ function FormDetail() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
-  const form = useForm({
+  // Update form initialization with proper typing
+  const form = useForm<FormValues>({
     defaultValues: {},
   });
 
@@ -202,7 +204,7 @@ function FormDetail() {
         setFormData(template);
         setIsCompleted(template.completed || false);
         
-        const initialValues: Record<string, any> = {};
+        const initialValues: FormValues = {};
         template.questions.forEach((field) => {
           if (field.value) {
             initialValues[field.id] = field.value;
@@ -218,7 +220,8 @@ function FormDetail() {
     return () => clearTimeout(timer);
   }, [formId, navigate, form]);
 
-  const onSubmit = (values: Record<string, any>) => {
+  // Update the onSubmit handler with proper typing
+  const onSubmit = (values: FormValues) => {
     setIsSubmitting(true);
 
     setTimeout(() => {
@@ -352,7 +355,7 @@ function FormDetail() {
                             <div className="flex items-center space-x-2">
                               <FormControl>
                                 <Checkbox
-                                  checked={field.value}
+                                  checked={field.value as boolean}
                                   onCheckedChange={field.onChange}
                                   disabled={isCompleted}
                                 />
@@ -367,7 +370,7 @@ function FormDetail() {
                                 <div key={option} className="flex items-center space-x-2">
                                   <FormControl>
                                     <Checkbox
-                                      checked={field.value?.includes?.(option)}
+                                      checked={Array.isArray(field.value) ? field.value.includes(option) : false}
                                       onCheckedChange={(checked) => {
                                         const currentValues = Array.isArray(field.value) ? field.value : [];
                                         if (checked) {
@@ -389,7 +392,7 @@ function FormDetail() {
                             <FormControl>
                               <RadioGroup
                                 onValueChange={field.onChange}
-                                value={field.value}
+                                value={field.value as string}
                                 disabled={isCompleted}
                                 className="space-y-2"
                               >
@@ -407,7 +410,7 @@ function FormDetail() {
                             <FormControl>
                               <Select
                                 onValueChange={field.onChange}
-                                value={field.value}
+                                value={field.value as string}
                                 disabled={isCompleted}
                               >
                                 <SelectTrigger>
