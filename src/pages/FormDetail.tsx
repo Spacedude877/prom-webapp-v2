@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -178,7 +179,7 @@ const formTemplates: Record<string, FormData> = {
 };
 
 function FormDetail() {
-  const { formId = "" } = useParams<{ formId?: string }>();
+  const { formId } = useParams<{ formId: string }>();  // Explicitly type formId as string
   const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
