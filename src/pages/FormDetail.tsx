@@ -25,7 +25,7 @@ import { FormData } from "@/types/forms";
 import { submitFormData } from "@/services/supabaseService";
 import FormSubmissions from "@/components/forms/FormSubmissions";
 
-const formTemplates = {
+const formTemplates: Record<string, FormData> = {
   "form-1": {
     id: "form-1",
     name: "Student Formal Registration",
@@ -193,8 +193,8 @@ function FormDetail() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (formId && formTemplates[formId as keyof typeof formTemplates]) {
-        const template = formTemplates[formId as keyof typeof formTemplates] as FormData;
+      if (formId && formTemplates[formId]) {
+        const template = formTemplates[formId];
         setFormData(template);
         setIsCompleted(template.completed || false);
         
@@ -229,7 +229,7 @@ function FormDetail() {
           if (formData) {
             const updatedTemplates = { ...formTemplates };
             if (formId) {
-              updatedTemplates[formId as keyof typeof formTemplates] = {
+              updatedTemplates[formId] = {
                 ...formData,
                 completed: true,
               };
@@ -367,7 +367,7 @@ function FormDetail() {
                             {question.required && <span className="ml-1 text-red-500">*</span>}
                           </FormLabel>
                           
-                          {question.type === "text" || question.type === "email" || question.type === "tel" || question.type === "number" ? (
+                          {question.type === "text" || question.type === "email" || question.type === "number" ? (
                             <FormControl>
                               <Input
                                 type={question.type}
