@@ -178,7 +178,7 @@ const formTemplates: Record<string, FormData> = {
 };
 
 function FormDetail() {
-  const { formId } = useParams();
+  const { formId } = useParams<{ formId: string }>();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -367,7 +367,7 @@ function FormDetail() {
                             {question.required && <span className="ml-1 text-red-500">*</span>}
                           </FormLabel>
                           
-                          {question.type === "text" || question.type === "email" || question.type === "number" ? (
+                          {question.type === "text" || question.type === "email" || question.type === "number" || question.type === "tel" ? (
                             <FormControl>
                               <Input
                                 type={question.type}
