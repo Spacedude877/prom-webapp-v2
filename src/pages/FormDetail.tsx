@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -23,9 +22,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Navigation from "@/components/layout/Navigation";
 import { ChevronLeft } from "lucide-react";
 import { FormData } from "@/types/forms";
-import { submitFormData, getFormSubmissions } from "@/services/supabaseService";
+import { submitFormData } from "@/services/supabaseService";
+import FormSubmissions from "@/components/forms/FormSubmissions";
 
-// Sample form templates for demonstration
 const formTemplates = {
   "form-1": {
     id: "form-1",
@@ -186,22 +185,19 @@ function FormDetail() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [supabaseError, setSupabaseError] = useState<string | null>(null);
   
-  // Set up the form
   const form = useForm({
     defaultValues: {},
   });
 
   useEffect(() => {
-    // Simulate API fetch with a small delay
     const timer = setTimeout(() => {
-      // In a real app, you would fetch the form data from an API
       if (formId && formTemplates[formId as keyof typeof formTemplates]) {
         const template = formTemplates[formId as keyof typeof formTemplates] as FormData;
         setFormData(template);
         setIsCompleted(template.completed || false);
         
-        // Initialize form values from template
         const initialValues: Record<string, any> = {};
         template.questions.forEach((field) => {
           if (field.value) {
@@ -210,7 +206,6 @@ function FormDetail() {
         });
         form.reset(initialValues);
       } else {
-        // Handle invalid form ID
         navigate("/forms");
       }
       setIsLoading(false);
@@ -223,16 +218,14 @@ function FormDetail() {
     setIsSubmitting(true);
 
     try {
-      // Submit form data to Supabase
       if (formId) {
         const result = await submitFormData(formId, values);
         
         if (result.success) {
-          toast.success("Form submitted successfully and saved to database!");
+          toast.success("Form submitted successfully!");
           setIsCompleted(true);
           setSubmissionStatus('success');
           
-          // In a real app, you would update the server with the form data
           if (formData) {
             const updatedTemplates = { ...formTemplates };
             if (formId) {
@@ -243,8 +236,15 @@ function FormDetail() {
             }
           }
         } else {
-          toast.error("Failed to submit form. Please try again.");
-          setSubmissionStatus('error');
+          if (result.mock) {
+            toast.warning("Demo mode: Form data not saved to database. Set up Supabase environment variables to enable saving.");
+            setSupabaseError("Supabase connection not configured. Please check environment variables.");
+            setIsCompleted(true);
+            setSubmissionStatus('success');
+          } else {
+            toast.error("Failed to submit form. Please try again.");
+            setSubmissionStatus('error');
+          }
         }
       }
     } catch (error) {
@@ -311,7 +311,6 @@ function FormDetail() {
       <Navigation />
       <div className="container mx-auto px-6 pt-24 pb-16">
         <div className="max-w-3xl mx-auto">
-          {/* Header */}
           <div className="flex items-center mb-6 animate-fade-in">
             <Button 
               onClick={handleGoBack} 
@@ -321,21 +320,34 @@ function FormDetail() {
               <ChevronLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{formData.name}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{formData?.name}</h1>
               <div className="flex items-center mt-1">
                 <span className={cn("px-2 py-1 rounded-full text-xs font-medium", statusColor)}>
                   {formStatus}
                 </span>
                 {submissionStatus === 'success' && (
                   <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Saved to Database
+                    {supabaseError ? "Demo Mode" : "Saved to Database"}
                   </span>
                 )}
               </div>
             </div>
           </div>
           
-          {/* Form Card */}
+          {supabaseError && (
+            <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-md">
+              <h3 className="font-medium text-amber-800">Configuration Note</h3>
+              <p className="text-sm text-amber-700">{supabaseError}</p>
+              <p className="text-sm text-amber-700 mt-2">
+                To enable database functionality, please set the Supabase environment variables:
+                <code className="block mt-1 p-2 bg-amber-100 rounded">
+                  VITE_SUPABASE_URL<br />
+                  VITE_SUPABASE_ANON_KEY
+                </code>
+              </p>
+            </div>
+          )}
+          
           <Card className="mb-8 animate-fade-in shadow-sm">
             <CardHeader>
               <CardTitle>Form Details</CardTitle>
@@ -343,7 +355,7 @@ function FormDetail() {
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  {formData.questions.map((question) => (
+                  {formData?.questions.map((question) => (
                     <FormField
                       key={question.id}
                       control={form.control}
@@ -439,7 +451,7 @@ function FormDetail() {
                     ) : (
                       <Button 
                         type="submit" 
-                        disabled={isSubmitting || formData.type === "upcoming" || formData.type === "overdue"}
+                        disabled={isSubmitting || formData?.type === "upcoming" || formData?.type === "overdue"}
                         className="flex items-center"
                       >
                         {isSubmitting ? (
@@ -460,6 +472,8 @@ function FormDetail() {
               </Form>
             </CardContent>
           </Card>
+          
+          {formId && <FormSubmissions formId={formId} />}
         </div>
       </div>
     </div>

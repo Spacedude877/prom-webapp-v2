@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getFormSubmissions } from '@/services/supabaseService';
 import { FormSubmission } from '@/types/supabase';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 interface FormSubmissionsProps {
   formId: string;
@@ -12,6 +14,7 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
   const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
     const loadSubmissions = async () => {
@@ -19,8 +22,15 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
       const result = await getFormSubmissions(formId);
       if (result.success && result.data) {
         setSubmissions(result.data);
+        setIsDemoMode(false);
+      } else if (result.mock) {
+        // This is the mock client (no Supabase credentials)
+        setIsDemoMode(true);
+        setSubmissions([]);
+        setError(null);
       } else {
         setError('Failed to load submissions');
+        setIsDemoMode(false);
       }
       setIsLoading(false);
     };
@@ -40,6 +50,25 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
             <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
             <div className="h-4 bg-gray-200 rounded animate-pulse w-5/6"></div>
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isDemoMode) {
+    return (
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Submissions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert className="bg-amber-50 border-amber-200">
+            <Info className="h-4 w-4 text-amber-800" />
+            <AlertTitle className="text-amber-800">Demo Mode</AlertTitle>
+            <AlertDescription className="text-amber-700">
+              Supabase connection is not configured. Please set up the Supabase environment variables to view and store form submissions.
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     );
