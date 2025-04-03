@@ -360,7 +360,7 @@ function FormDetail() {
                     <FormField
                       key={question.id}
                       control={form.control}
-                      name={question.id}
+                      name={question.id as any}  
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
