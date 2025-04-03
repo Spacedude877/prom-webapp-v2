@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -24,6 +25,7 @@ import { ChevronLeft } from "lucide-react";
 import { FormData, FormValues } from "@/types/forms";
 import { submitFormData } from "@/services/supabaseService";
 import FormSubmissions from "@/components/forms/FormSubmissions";
+import { supabase } from "@/integrations/supabase/client";
 
 const formTemplates: Record<string, FormData> = {
   "form-1": {
@@ -219,32 +221,61 @@ function FormDetail() {
 
     try {
       if (formId) {
-        const result = await submitFormData(formId, values);
+        console.log("Submitting form data to Supabase:", values);
         
-        if (result.success) {
+        // Use the direct Supabase client for form submissions
+        const { error } = await supabase
+          .from('form_submissions')
+          .insert([
+            { 
+              form_id: formId,
+              submission_data: values,
+              submitted_at: new Date().toISOString(),
+            }
+          ]);
+
+        if (error) {
+          console.error("Supabase submission error:", error);
+          toast.error(`Error submitting form: ${error.message}`);
+          setSubmissionStatus('error');
+          setSupabaseError(error.message);
+        } else {
+          console.log("Form submission successful");
           toast.success("Form submitted successfully!");
           setIsCompleted(true);
           setSubmissionStatus('success');
           
+          // Handle guest registration if this is the student formal registration form
+          if (formId === 'form-1') {
+            const guestData = {
+              first_name: values.firstname,
+              surname: values.surname,
+              student_number: values['student-number'],
+              email: values['student-email'],
+              grade_level: values['grade-level'],
+              ticket_type: values['ticket-type'],
+              has_guest: values['paying-for-guest'] === 'Yes',
+              form_id: formId
+            };
+            
+            const { error: guestError } = await supabase
+              .from('guest_info')
+              .insert([guestData]);
+              
+            if (guestError) {
+              console.error("Error saving guest info:", guestError);
+              toast.warning("Form submitted, but guest info may not have been saved completely.");
+            }
+          }
+          
           if (formData) {
             const updatedTemplates = { ...formTemplates };
-            const id = formId as keyof typeof formTemplates;
-            if (id in updatedTemplates) {
-              updatedTemplates[id] = {
+            if (formId in updatedTemplates) {
+              updatedTemplates[formId] = {
                 ...formData,
                 completed: true,
               };
             }
-          }
-        } else {
-          if (result.mock) {
-            toast.warning("Demo mode: Form data not saved to database. Set up Supabase environment variables to enable saving.");
-            setSupabaseError("Supabase connection not configured. Please check environment variables.");
-            setIsCompleted(true);
-            setSubmissionStatus('success');
-          } else {
-            toast.error("Failed to submit form. Please try again.");
-            setSubmissionStatus('error');
           }
         }
       }

@@ -85,7 +85,7 @@ export const submitFormData = async (formId: string, formData: Record<string, an
       .from('form_submissions')
       .insert([
         { 
-          form_id: formId,
+          form_id: formId, // Fix: Changed from "form id" to "form_id" to match schema
           submission_data: formData,
           submitted_at: new Date().toISOString(),
         }

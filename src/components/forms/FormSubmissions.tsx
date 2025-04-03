@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getFormSubmissions } from '@/services/supabaseService';
-import { FormSubmission } from '@/types/supabase';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { FormSubmission } from '@/types/supabase';
 
 interface FormSubmissionsProps {
   formId: string;
@@ -19,20 +19,34 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
   useEffect(() => {
     const loadSubmissions = async () => {
       setIsLoading(true);
-      const result = await getFormSubmissions(formId);
-      if (result.success && result.data) {
-        setSubmissions(result.data);
-        setIsDemoMode(false);
-      } else if (result.mock) {
-        // This is the mock client (no Supabase credentials)
-        setIsDemoMode(true);
+      
+      try {
+        console.log(`Fetching form submissions for form ID: ${formId}`);
+        
+        const { data, error } = await supabase
+          .from('form_submissions')
+          .select('*')
+          .eq('form_id', formId)
+          .order('submitted_at', { ascending: false });
+        
+        if (error) {
+          console.error("Error fetching submissions:", error);
+          setError(`Failed to load submissions: ${error.message}`);
+          setIsDemoMode(false);
+          setSubmissions([]);
+        } else {
+          console.log(`Retrieved ${data?.length || 0} submissions`, data);
+          setSubmissions(data || []);
+          setError(null);
+          setIsDemoMode(false);
+        }
+      } catch (err) {
+        console.error("Exception in loadSubmissions:", err);
+        setError('Failed to load submissions due to an unexpected error');
         setSubmissions([]);
-        setError(null);
-      } else {
-        setError('Failed to load submissions');
-        setIsDemoMode(false);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     loadSubmissions();
