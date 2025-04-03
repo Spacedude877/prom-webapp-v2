@@ -375,6 +375,7 @@ function FormDetail() {
                                 placeholder={question.placeholder || `Enter ${question.label.toLowerCase()}`}
                                 disabled={isCompleted}
                                 {...field}
+                                value={field.value || ''}
                               />
                             </FormControl>
                           ) : question.type === "textarea" ? (
@@ -384,13 +385,14 @@ function FormDetail() {
                                 className="min-h-[120px]"
                                 disabled={isCompleted}
                                 {...field}
+                                value={field.value || ''}
                               />
                             </FormControl>
                           ) : question.type === "checkbox" && !question.options ? (
                             <div className="flex items-center space-x-2">
                               <FormControl>
                                 <Checkbox
-                                  checked={field.value as boolean}
+                                  checked={Boolean(field.value)}
                                   onCheckedChange={field.onChange}
                                   disabled={isCompleted}
                                 />
@@ -403,7 +405,7 @@ function FormDetail() {
                             <FormControl>
                               <RadioGroup
                                 onValueChange={field.onChange}
-                                value={field.value as string}
+                                value={field.value || ''}
                                 disabled={isCompleted}
                                 className="space-y-2"
                               >
@@ -421,7 +423,7 @@ function FormDetail() {
                             <FormControl>
                               <Select
                                 onValueChange={field.onChange}
-                                value={field.value as string}
+                                value={field.value || ''}
                                 disabled={isCompleted}
                               >
                                 <SelectTrigger>

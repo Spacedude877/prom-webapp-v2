@@ -14,7 +14,7 @@ export interface FormQuestion {
   placeholder?: string;
   required: boolean;
   options?: string[]; // For select, radio, checkbox
-  value?: string;
+  value?: string | boolean;
   checkboxLabel?: string;
 }
 
@@ -30,5 +30,5 @@ export interface FormData {
   fields?: FormQuestion[];
 }
 
-// Add a type for the form values to fix the React Hook Form typing
-export type FormValues = Record<string, string | boolean>;
+// Fix the FormValues type to properly handle form field values based on their types
+export type FormValues = Record<string, any>;
