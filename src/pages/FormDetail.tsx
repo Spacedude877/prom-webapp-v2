@@ -178,7 +178,7 @@ const formTemplates: Record<string, FormData> = {
 };
 
 function FormDetail() {
-  const { formId } = useParams<{ formId: string }>();
+  const { formId = "" } = useParams<{ formId?: string }>();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -193,8 +193,8 @@ function FormDetail() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (formId && formTemplates[formId]) {
-        const template = formTemplates[formId];
+      if (formId && formId in formTemplates) {
+        const template = formTemplates[formId as keyof typeof formTemplates];
         setFormData(template);
         setIsCompleted(template.completed || false);
         
@@ -228,8 +228,9 @@ function FormDetail() {
           
           if (formData) {
             const updatedTemplates = { ...formTemplates };
-            if (formId) {
-              updatedTemplates[formId] = {
+            const id = formId as keyof typeof formTemplates;
+            if (id in updatedTemplates) {
+              updatedTemplates[id] = {
                 ...formData,
                 completed: true,
               };
