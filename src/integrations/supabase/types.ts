@@ -30,6 +30,48 @@ export type Database = {
         }
         Relationships: []
       }
+      guest_info: {
+        Row: {
+          additional_info: Json | null
+          created_at: string
+          email: string | null
+          first_name: string
+          form_id: string
+          grade_level: string | null
+          has_guest: boolean | null
+          id: string
+          student_number: string | null
+          surname: string
+          ticket_type: string | null
+        }
+        Insert: {
+          additional_info?: Json | null
+          created_at?: string
+          email?: string | null
+          first_name: string
+          form_id: string
+          grade_level?: string | null
+          has_guest?: boolean | null
+          id?: string
+          student_number?: string | null
+          surname: string
+          ticket_type?: string | null
+        }
+        Update: {
+          additional_info?: Json | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          form_id?: string
+          grade_level?: string | null
+          has_guest?: boolean | null
+          id?: string
+          student_number?: string | null
+          surname?: string
+          ticket_type?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
