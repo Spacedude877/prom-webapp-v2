@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -22,7 +21,7 @@ import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navigation from "@/components/layout/Navigation";
 import { ChevronLeft } from "lucide-react";
-import { FormData } from "@/types/forms";
+import { FormData, FormValues } from "@/types/forms";
 import { submitFormData } from "@/services/supabaseService";
 import FormSubmissions from "@/components/forms/FormSubmissions";
 
@@ -179,7 +178,7 @@ const formTemplates: Record<string, FormData> = {
 };
 
 function FormDetail() {
-  const { formId } = useParams<{ formId: string }>();  // Explicitly type formId as string
+  const { formId } = useParams<{ formId: string }>();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -188,14 +187,14 @@ function FormDetail() {
   const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
   
-  const form = useForm({
+  const form = useForm<FormValues>({
     defaultValues: {},
   });
 
   useEffect(() => {
     const timer = setTimeout(() => {
       if (formId && formId in formTemplates) {
-        const template = formTemplates[formId as keyof typeof formTemplates];
+        const template = formTemplates[formId];
         setFormData(template);
         setIsCompleted(template.completed || false);
         
@@ -215,7 +214,7 @@ function FormDetail() {
     return () => clearTimeout(timer);
   }, [formId, navigate, form]);
 
-  const onSubmit = async (values: Record<string, any>) => {
+  const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
 
     try {
@@ -361,7 +360,7 @@ function FormDetail() {
                     <FormField
                       key={question.id}
                       control={form.control}
-                      name={question.id as any}  
+                      name={question.id}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
@@ -391,7 +390,7 @@ function FormDetail() {
                             <div className="flex items-center space-x-2">
                               <FormControl>
                                 <Checkbox
-                                  checked={field.value}
+                                  checked={field.value as boolean}
                                   onCheckedChange={field.onChange}
                                   disabled={isCompleted}
                                 />
@@ -404,7 +403,7 @@ function FormDetail() {
                             <FormControl>
                               <RadioGroup
                                 onValueChange={field.onChange}
-                                value={field.value}
+                                value={field.value as string}
                                 disabled={isCompleted}
                                 className="space-y-2"
                               >
@@ -422,7 +421,7 @@ function FormDetail() {
                             <FormControl>
                               <Select
                                 onValueChange={field.onChange}
-                                value={field.value}
+                                value={field.value as string}
                                 disabled={isCompleted}
                               >
                                 <SelectTrigger>

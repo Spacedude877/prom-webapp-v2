@@ -1,5 +1,4 @@
 
-
 export interface FormItemType {
   id: string;
   title: string;
@@ -30,3 +29,6 @@ export interface FormData {
   type: 'active' | 'upcoming' | 'overdue';
   fields?: FormQuestion[];
 }
+
+// Add a type for the form values to fix the React Hook Form typing
+export type FormValues = Record<string, string | boolean>;
