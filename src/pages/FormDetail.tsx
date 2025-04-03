@@ -23,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Navigation from "@/components/layout/Navigation";
 import { ChevronLeft } from "lucide-react";
 import { FormData } from "@/types/forms";
+import { submitFormData, getFormSubmissions } from "@/services/supabaseService";
 
 // Sample form templates for demonstration
 const formTemplates = {
@@ -184,6 +185,7 @@ function FormDetail() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
   
   // Set up the form
   const form = useForm({
@@ -217,30 +219,46 @@ function FormDetail() {
     return () => clearTimeout(timer);
   }, [formId, navigate, form]);
 
-  const onSubmit = (values: Record<string, any>) => {
+  const onSubmit = async (values: Record<string, any>) => {
     setIsSubmitting(true);
 
-    // Simulate form submission
-    setTimeout(() => {
-      toast.success("Form submitted successfully!");
-      setIsCompleted(true);
-      setIsSubmitting(false);
-
-      // In a real app, you would update the server with the form data
-      if (formData) {
-        const updatedTemplates = { ...formTemplates };
-        if (formId) {
-          updatedTemplates[formId as keyof typeof formTemplates] = {
-            ...formData,
-            completed: true,
-          };
+    try {
+      // Submit form data to Supabase
+      if (formId) {
+        const result = await submitFormData(formId, values);
+        
+        if (result.success) {
+          toast.success("Form submitted successfully and saved to database!");
+          setIsCompleted(true);
+          setSubmissionStatus('success');
+          
+          // In a real app, you would update the server with the form data
+          if (formData) {
+            const updatedTemplates = { ...formTemplates };
+            if (formId) {
+              updatedTemplates[formId as keyof typeof formTemplates] = {
+                ...formData,
+                completed: true,
+              };
+            }
+          }
+        } else {
+          toast.error("Failed to submit form. Please try again.");
+          setSubmissionStatus('error');
         }
       }
-    }, 1500);
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("An error occurred while submitting the form");
+      setSubmissionStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleEdit = () => {
     setIsCompleted(false);
+    setSubmissionStatus('idle');
   };
 
   const handleGoBack = () => {
@@ -308,6 +326,11 @@ function FormDetail() {
                 <span className={cn("px-2 py-1 rounded-full text-xs font-medium", statusColor)}>
                   {formStatus}
                 </span>
+                {submissionStatus === 'success' && (
+                  <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Saved to Database
+                  </span>
+                )}
               </div>
             </div>
           </div>
