@@ -200,9 +200,12 @@ function FormDetail() {
         setFormData(template);
         setIsCompleted(template.completed || false);
         
+        // Only set initial values if not a guest form and if there are values
+        // This ensures guest forms start empty
         const initialValues: Record<string, any> = {};
         template.questions.forEach((field) => {
-          if (field.value) {
+          // Only include predefined values for non-guest forms
+          if (field.value && !field.id.includes('guest')) {
             initialValues[field.id] = field.value;
           }
         });
@@ -271,6 +274,8 @@ function FormDetail() {
   };
 
   const handleEdit = () => {
+    // Reset the completion state without clearing form values
+    // This enables editing without losing the existing values
     setIsCompleted(false);
     setSubmissionStatus('idle');
   };
