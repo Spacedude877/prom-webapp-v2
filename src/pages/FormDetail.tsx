@@ -188,6 +188,7 @@ function FormDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   
   const form = useForm<FormValues>({
     defaultValues: {},
@@ -204,8 +205,8 @@ function FormDetail() {
         // This ensures guest forms start empty
         const initialValues: Record<string, any> = {};
         template.questions.forEach((field) => {
-          // Only include predefined values for non-guest forms
-          if (field.value && !field.id.includes('guest')) {
+          // Skip guest-related fields completely
+          if (field.value && !field.id.includes('guest') && field.id !== 'paying-for-guest') {
             initialValues[field.id] = field.value;
           }
         });
@@ -251,6 +252,7 @@ function FormDetail() {
           console.log("Form submission successful");
           toast.success("Form submitted successfully!");
           setIsCompleted(true);
+          setIsEditing(false);
           setSubmissionStatus('success');
           
           if (formData) {
@@ -274,14 +276,21 @@ function FormDetail() {
   };
 
   const handleEdit = () => {
-    // Reset the completion state without clearing form values
-    // This enables editing without losing the existing values
+    // Enable editing mode without resetting form values
+    setIsEditing(true);
     setIsCompleted(false);
     setSubmissionStatus('idle');
   };
 
   const handleGoBack = () => {
     navigate("/forms");
+  };
+
+  // Handle cancel editing - go back to completed state
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setIsCompleted(true);
+    setSubmissionStatus('success');
   };
 
   if (isLoading) {
@@ -316,8 +325,15 @@ function FormDetail() {
     );
   }
 
-  const formStatus = isCompleted ? "Completed" : formData.type === "active" ? "Active" : formData.type === "upcoming" ? "Upcoming" : "Overdue";
-  const statusColor = isCompleted
+  const formStatus = isCompleted && !isEditing 
+    ? "Completed" 
+    : formData.type === "active" 
+    ? "Active" 
+    : formData.type === "upcoming" 
+    ? "Upcoming" 
+    : "Overdue";
+    
+  const statusColor = isCompleted && !isEditing
     ? "bg-green-100 text-green-800"
     : formData.type === "active"
     ? "bg-blue-100 text-blue-800"
@@ -344,7 +360,12 @@ function FormDetail() {
                 <span className={cn("px-2 py-1 rounded-full text-xs font-medium", statusColor)}>
                   {formStatus}
                 </span>
-                {submissionStatus === 'success' && (
+                {isEditing && (
+                  <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    Editing
+                  </span>
+                )}
+                {submissionStatus === 'success' && !isEditing && (
                   <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     {supabaseError ? "Demo Mode" : "Saved to Database"}
                   </span>
@@ -391,7 +412,7 @@ function FormDetail() {
                               <Input
                                 type={question.type}
                                 placeholder={question.placeholder || `Enter ${question.label.toLowerCase()}`}
-                                disabled={isCompleted}
+                                disabled={isCompleted && !isEditing}
                                 {...field}
                                 value={field.value || ''}
                               />
@@ -401,7 +422,7 @@ function FormDetail() {
                               <Textarea
                                 placeholder={question.placeholder || `Enter ${question.label.toLowerCase()}`}
                                 className="min-h-[120px]"
-                                disabled={isCompleted}
+                                disabled={isCompleted && !isEditing}
                                 {...field}
                                 value={field.value || ''}
                               />
@@ -412,7 +433,7 @@ function FormDetail() {
                                 <Checkbox
                                   checked={Boolean(field.value)}
                                   onCheckedChange={field.onChange}
-                                  disabled={isCompleted}
+                                  disabled={isCompleted && !isEditing}
                                 />
                               </FormControl>
                               <div className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -424,7 +445,7 @@ function FormDetail() {
                               <RadioGroup
                                 onValueChange={field.onChange}
                                 value={field.value || ''}
-                                disabled={isCompleted}
+                                disabled={isCompleted && !isEditing}
                                 className="space-y-2"
                               >
                                 {question.options?.map((option) => (
@@ -442,7 +463,7 @@ function FormDetail() {
                               <Select
                                 onValueChange={field.onChange}
                                 value={field.value || ''}
-                                disabled={isCompleted}
+                                disabled={isCompleted && !isEditing}
                               >
                                 <SelectTrigger>
                                   <SelectValue placeholder={`Select ${question.label.toLowerCase()}`} />
@@ -464,29 +485,40 @@ function FormDetail() {
                     />
                   ))}
 
-                  <div className="mt-8 flex justify-end">
-                    {isCompleted ? (
+                  <div className="mt-8 flex justify-end space-x-3">
+                    {isCompleted && !isEditing ? (
                       <Button type="button" onClick={handleEdit}>
                         Edit Response
                       </Button>
                     ) : (
-                      <Button 
-                        type="submit" 
-                        disabled={isSubmitting || formData?.type === "upcoming" || formData?.type === "overdue"}
-                        className="flex items-center"
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Submitting...
-                          </>
-                        ) : (
-                          "Submit Form"
+                      <>
+                        {isEditing && (
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={handleCancelEdit}
+                          >
+                            Cancel
+                          </Button>
                         )}
-                      </Button>
+                        <Button 
+                          type="submit" 
+                          disabled={isSubmitting || formData?.type === "upcoming" || formData?.type === "overdue"}
+                          className="flex items-center"
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Submitting...
+                            </>
+                          ) : (
+                            isEditing ? "Save Changes" : "Submit Form"
+                          )}
+                        </Button>
+                      </>
                     )}
                   </div>
                 </form>
