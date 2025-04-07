@@ -11,29 +11,7 @@ export type Database = {
     Tables: {
       form_submissions: {
         Row: {
-          "form id": string | null
-          id: string
-          submission_data: Json | null
-          submitted_at: string
-        }
-        Insert: {
-          "form id"?: string | null
-          id: string
-          submission_data?: Json | null
-          submitted_at?: string
-        }
-        Update: {
-          "form id"?: string | null
-          id?: string
-          submission_data?: Json | null
-          submitted_at?: string
-        }
-        Relationships: []
-      }
-      guest_info: {
-        Row: {
           additional_info: Json | null
-          created_at: string
           email: string | null
           first_name: string
           form_id: string
@@ -41,12 +19,13 @@ export type Database = {
           has_guest: boolean | null
           id: string
           student_number: string | null
+          submission_data: Json | null
+          submitted_at: string
           surname: string
           ticket_type: string | null
         }
         Insert: {
           additional_info?: Json | null
-          created_at?: string
           email?: string | null
           first_name: string
           form_id: string
@@ -54,12 +33,13 @@ export type Database = {
           has_guest?: boolean | null
           id?: string
           student_number?: string | null
+          submission_data?: Json | null
+          submitted_at?: string
           surname: string
           ticket_type?: string | null
         }
         Update: {
           additional_info?: Json | null
-          created_at?: string
           email?: string | null
           first_name?: string
           form_id?: string
@@ -67,6 +47,8 @@ export type Database = {
           has_guest?: boolean | null
           id?: string
           student_number?: string | null
+          submission_data?: Json | null
+          submitted_at?: string
           surname?: string
           ticket_type?: string | null
         }

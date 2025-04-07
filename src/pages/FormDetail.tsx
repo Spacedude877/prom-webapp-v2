@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -226,13 +225,18 @@ function FormDetail() {
         // Use the direct Supabase client for form submissions
         const { error } = await supabase
           .from('form_submissions')
-          .insert([
-            { 
-              form_id: formId,
-              submission_data: values,
-              submitted_at: new Date().toISOString(),
-            }
-          ]);
+          .insert({
+            form_id: formId,
+            submission_data: values,
+            submitted_at: new Date().toISOString(),
+            first_name: values.firstname || '',
+            surname: values.surname || '',
+            student_number: values['student-number'],
+            email: values['student-email'],
+            grade_level: values['grade-level'],
+            ticket_type: values['ticket-type'],
+            has_guest: values['paying-for-guest'] === 'Yes'
+          });
 
         if (error) {
           console.error("Supabase submission error:", error);
@@ -244,29 +248,6 @@ function FormDetail() {
           toast.success("Form submitted successfully!");
           setIsCompleted(true);
           setSubmissionStatus('success');
-          
-          // Handle guest registration if this is the student formal registration form
-          if (formId === 'form-1') {
-            const guestData = {
-              first_name: values.firstname,
-              surname: values.surname,
-              student_number: values['student-number'],
-              email: values['student-email'],
-              grade_level: values['grade-level'],
-              ticket_type: values['ticket-type'],
-              has_guest: values['paying-for-guest'] === 'Yes',
-              form_id: formId
-            };
-            
-            const { error: guestError } = await supabase
-              .from('guest_info')
-              .insert([guestData]);
-              
-            if (guestError) {
-              console.error("Error saving guest info:", guestError);
-              toast.warning("Form submitted, but guest info may not have been saved completely.");
-            }
-          }
           
           if (formData) {
             const updatedTemplates = { ...formTemplates };

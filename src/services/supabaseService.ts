@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -68,7 +67,7 @@ export const submitGuestInfo = async (guestData: {
   }
 };
 
-// Update existing submitFormData to also store guest info if applicable
+// Update existing submitFormData to use correct field names
 export const submitFormData = async (formId: string, formData: Record<string, any>) => {
   try {
     if (!supabaseUrl || !supabaseKey) {
@@ -80,32 +79,21 @@ export const submitFormData = async (formId: string, formData: Record<string, an
       };
     }
     
-    // First, submit form data
+    // First, submit form data with correct field name
     const formSubmission = await supabase
       .from('form_submissions')
-      .insert([
-        { 
-          form_id: formId, // Fix: Changed from "form id" to "form_id" to match schema
-          submission_data: formData,
-          submitted_at: new Date().toISOString(),
-        }
-      ]);
-
-    // Check if the form is for guest registration (e.g., form-1)
-    if (formId === 'form-1') {
-      const guestData = {
-        first_name: formData.firstname,
-        surname: formData.surname,
+      .insert({
+        form_id: formId,
+        submission_data: formData,
+        submitted_at: new Date().toISOString(),
+        first_name: formData.firstname || '',
+        surname: formData.surname || '',
         student_number: formData['student-number'],
         email: formData['student-email'],
         grade_level: formData['grade-level'],
         ticket_type: formData['ticket-type'],
-        has_guest: formData['paying-for-guest'] === 'Yes',
-        form_id: formId
-      };
-
-      await submitGuestInfo(guestData);
-    }
+        has_guest: formData['paying-for-guest'] === 'Yes'
+      });
 
     if (formSubmission.error) throw formSubmission.error;
     return { success: true, data: formSubmission.data };
