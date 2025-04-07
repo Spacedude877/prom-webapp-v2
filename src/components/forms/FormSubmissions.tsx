@@ -33,7 +33,25 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
           setSubmissions([]);
         } else {
           console.log(`Retrieved ${data?.length || 0} submissions`, data);
-          setSubmissions(data as FormSubmission[] || []);
+          
+          // Transform the data to match our FormSubmission interface
+          const transformedData = data?.map(item => ({
+            id: item.id,
+            form_id: item["form id"], // Transform from "form id" to form_id
+            submission_data: item.submission_data || {},
+            submitted_at: item.submitted_at,
+            created_at: item.created_at,
+            first_name: item.first_name,
+            surname: item.surname,
+            student_number: item.student_number,
+            email: item.email,
+            grade_level: item.grade_level,
+            ticket_type: item.ticket_type,
+            has_guest: item.has_guest,
+            additional_info: item.additional_info
+          })) as FormSubmission[];
+          
+          setSubmissions(transformedData || []);
           setError(null);
           setIsDemoMode(!success);
         }

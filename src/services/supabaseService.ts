@@ -45,7 +45,7 @@ export const submitGuestInfo = async (guestData: {
   ticket_type?: string;
   has_guest?: boolean;
   additional_info?: Record<string, any>;
-  "form id": string; // Changed from form_id to match Supabase schema
+  form_id: string; // Keep as form_id for our internal use
 }) => {
   try {
     if (!supabaseUrl || !supabaseKey) {
@@ -57,9 +57,18 @@ export const submitGuestInfo = async (guestData: {
       };
     }
     
+    // Transform form_id to "form id" for Supabase
+    const supabaseData = {
+      ...guestData,
+      "form id": guestData.form_id
+    };
+    
+    // Remove the form_id property
+    delete (supabaseData as any).form_id;
+    
     const { data, error } = await supabase
       .from('guest_info')
-      .insert([guestData]);
+      .insert([supabaseData]);
 
     if (error) throw error;
     return { success: true, data };
@@ -85,7 +94,7 @@ export const submitFormData = async (formId: string, formData: Record<string, an
     const formSubmission = await supabase
       .from('form_submissions')
       .insert({
-        "form id": formId, // Changed from form_id to match Supabase schema
+        "form id": formId, // Use "form id" for Supabase
         submission_data: formData,
         submitted_at: new Date().toISOString(),
         first_name: formData.firstname || '',
@@ -121,7 +130,7 @@ export const getGuestSubmissions = async (formId: string) => {
     const { data, error } = await supabase
       .from('guest_info')
       .select('*')
-      .eq('form id', formId) // Changed from form_id to match Supabase schema
+      .eq('form id', formId) // Use "form id" for Supabase
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -148,7 +157,7 @@ export const getFormSubmissions = async (formId: string) => {
     const { data, error } = await supabase
       .from('form_submissions')
       .select('*')
-      .eq('form id', formId) // Changed from form_id to match Supabase schema
+      .eq('form id', formId) // Use "form id" for Supabase
       .order('submitted_at', { ascending: false });
 
     if (error) throw error;
