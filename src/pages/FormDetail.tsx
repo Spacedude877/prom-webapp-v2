@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -222,11 +223,11 @@ function FormDetail() {
       if (formId) {
         console.log("Submitting form data to Supabase:", values);
         
-        // Use the direct Supabase client for form submissions
+        // Use the correct field name format for Supabase
         const { error } = await supabase
           .from('form_submissions')
           .insert({
-            "form id": formId,
+            "form id": formId, // Use "form id" with quotes for Supabase
             submission_data: values,
             submitted_at: new Date().toISOString(),
             first_name: values.firstname || '',

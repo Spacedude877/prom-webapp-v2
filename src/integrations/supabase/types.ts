@@ -14,7 +14,7 @@ export type Database = {
           additional_info: Json | null
           email: string | null
           first_name: string
-          form_id: string
+          "form id": string
           grade_level: string | null
           has_guest: boolean | null
           id: string
@@ -28,7 +28,7 @@ export type Database = {
           additional_info?: Json | null
           email?: string | null
           first_name: string
-          form_id: string
+          "form id": string
           grade_level?: string | null
           has_guest?: boolean | null
           id?: string
@@ -42,7 +42,7 @@ export type Database = {
           additional_info?: Json | null
           email?: string | null
           first_name?: string
-          form_id?: string
+          "form id"?: string
           grade_level?: string | null
           has_guest?: boolean | null
           id?: string
