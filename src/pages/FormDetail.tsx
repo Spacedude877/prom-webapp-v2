@@ -226,7 +226,7 @@ function FormDetail() {
         const { error } = await supabase
           .from('form_submissions')
           .insert({
-            form_id: formId,
+            "form id": formId,
             submission_data: values,
             submitted_at: new Date().toISOString(),
             first_name: values.firstname || '',

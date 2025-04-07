@@ -1,5 +1,7 @@
+
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/integrations/supabase/types';
+import { FormSubmission } from '@/types/supabase';
 
 // Initialize Supabase client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -43,7 +45,7 @@ export const submitGuestInfo = async (guestData: {
   ticket_type?: string;
   has_guest?: boolean;
   additional_info?: Record<string, any>;
-  form_id: string;
+  "form id": string; // Changed from form_id to match Supabase schema
 }) => {
   try {
     if (!supabaseUrl || !supabaseKey) {
@@ -83,7 +85,7 @@ export const submitFormData = async (formId: string, formData: Record<string, an
     const formSubmission = await supabase
       .from('form_submissions')
       .insert({
-        form_id: formId,
+        "form id": formId, // Changed from form_id to match Supabase schema
         submission_data: formData,
         submitted_at: new Date().toISOString(),
         first_name: formData.firstname || '',
@@ -119,7 +121,7 @@ export const getGuestSubmissions = async (formId: string) => {
     const { data, error } = await supabase
       .from('guest_info')
       .select('*')
-      .eq('form_id', formId)
+      .eq('form id', formId) // Changed from form_id to match Supabase schema
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -146,7 +148,7 @@ export const getFormSubmissions = async (formId: string) => {
     const { data, error } = await supabase
       .from('form_submissions')
       .select('*')
-      .eq('form_id', formId)
+      .eq('form id', formId) // Changed from form_id to match Supabase schema
       .order('submitted_at', { ascending: false });
 
     if (error) throw error;
