@@ -46,6 +46,7 @@ export const submitGuestInfo = async (guestData: {
   has_guest?: boolean;
   additional_info?: Record<string, any>;
   form_id: string; // Keep as form_id for our internal use
+  user_email?: string; // Add user_email field
 }) => {
   try {
     if (!supabaseUrl || !supabaseKey) {
@@ -60,7 +61,8 @@ export const submitGuestInfo = async (guestData: {
     // Transform form_id to "form id" for Supabase
     const supabaseData = {
       ...guestData,
-      "form id": guestData.form_id
+      "form id": guestData.form_id,
+      user_email: guestData.user_email
     };
     
     // Remove the form_id property
@@ -78,8 +80,8 @@ export const submitGuestInfo = async (guestData: {
   }
 };
 
-// Update existing submitFormData to use correct field names
-export const submitFormData = async (formId: string, formData: Record<string, any>) => {
+// Update existing submitFormData to use correct field names and include user_email
+export const submitFormData = async (formId: string, formData: Record<string, any>, userEmail?: string) => {
   try {
     if (!supabaseUrl || !supabaseKey) {
       console.warn('Cannot submit form: Supabase credentials missing');
@@ -103,7 +105,8 @@ export const submitFormData = async (formId: string, formData: Record<string, an
         email: formData['student-email'],
         grade_level: formData['grade-level'],
         ticket_type: formData['ticket-type'],
-        has_guest: formData['paying-for-guest'] === 'Yes'
+        has_guest: formData['paying-for-guest'] === 'Yes',
+        user_email: userEmail || null // Include user_email if available
       });
 
     if (formSubmission.error) throw formSubmission.error;

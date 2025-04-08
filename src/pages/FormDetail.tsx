@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -26,6 +25,7 @@ import { FormData, FormValues } from "@/types/forms";
 import { submitFormData } from "@/services/supabaseService";
 import FormSubmissions from "@/components/forms/FormSubmissions";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const formTemplates: Record<string, FormData> = {
   "form-1": {
@@ -189,7 +189,8 @@ function FormDetail() {
   const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  
+  const { isAuthenticated, user } = useAuth();
+
   const form = useForm<FormValues>({
     defaultValues: {},
   });
@@ -201,11 +202,8 @@ function FormDetail() {
         setFormData(template);
         setIsCompleted(template.completed || false);
         
-        // Only set initial values if not a guest form and if there are values
-        // This ensures guest forms start empty
         const initialValues: Record<string, any> = {};
         template.questions.forEach((field) => {
-          // Skip guest-related fields completely
           if (field.value && !field.id.includes('guest') && field.id !== 'paying-for-guest') {
             initialValues[field.id] = field.value;
           }
@@ -227,11 +225,10 @@ function FormDetail() {
       if (formId) {
         console.log("Submitting form data to Supabase:", values);
         
-        // Use the correct field name format for Supabase
         const { error } = await supabase
           .from('form_submissions')
           .insert({
-            "form id": formId, // Use "form id" with quotes for Supabase
+            "form id": formId,
             submission_data: values,
             submitted_at: new Date().toISOString(),
             first_name: values.firstname || '',
@@ -240,7 +237,8 @@ function FormDetail() {
             email: values['student-email'],
             grade_level: values['grade-level'],
             ticket_type: values['ticket-type'],
-            has_guest: values['paying-for-guest'] === 'Yes'
+            has_guest: values['paying-for-guest'] === 'Yes',
+            user_email: user?.email || null
           });
 
         if (error) {
@@ -276,7 +274,6 @@ function FormDetail() {
   };
 
   const handleEdit = () => {
-    // Enable editing mode without resetting form values
     setIsEditing(true);
     setIsCompleted(false);
     setSubmissionStatus('idle');
@@ -286,7 +283,6 @@ function FormDetail() {
     navigate("/forms");
   };
 
-  // Handle cancel editing - go back to completed state
   const handleCancelEdit = () => {
     setIsEditing(false);
     setIsCompleted(true);

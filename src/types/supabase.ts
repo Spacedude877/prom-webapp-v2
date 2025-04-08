@@ -14,4 +14,5 @@ export interface FormSubmission {
   ticket_type?: string;
   has_guest?: boolean;
   additional_info?: Record<string, any>;
+  user_email?: string; // Add user_email field
 }

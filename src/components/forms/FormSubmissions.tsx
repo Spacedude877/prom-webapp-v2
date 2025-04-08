@@ -48,7 +48,8 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
             grade_level: item.grade_level,
             ticket_type: item.ticket_type,
             has_guest: item.has_guest,
-            additional_info: item.additional_info
+            additional_info: item.additional_info,
+            user_email: item.user_email // Add the user_email field
           })) as FormSubmission[];
           
           setSubmissions(transformedData || []);
@@ -142,6 +143,11 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
                 <span className="text-sm text-gray-500">
                   Submitted: {new Date(submission.submitted_at).toLocaleString()}
                 </span>
+                {submission.user_email && (
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                    by: {submission.user_email}
+                  </span>
+                )}
               </div>
               <div className="space-y-2">
                 {Object.entries(submission.submission_data).map(([key, value]) => (

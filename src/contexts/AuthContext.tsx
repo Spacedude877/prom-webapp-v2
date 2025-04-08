@@ -1,13 +1,16 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { User, Session } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
-type User = {
+type AuthUser = {
   email: string;
   name?: string;
 };
 
 type AuthContextType = {
-  user: User | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
@@ -16,35 +19,160 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user database using localStorage
-const getUsers = (): Record<string, { password: string; name?: string }> => {
-  const users = localStorage.getItem("users");
-  return users ? JSON.parse(users) : {};
-};
-
-const saveUsers = (users: Record<string, { password: string; name?: string }>) => {
-  localStorage.setItem("users", JSON.stringify(users));
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check for existing session on initial load
+  // Initialize auth state and set up listener
   useEffect(() => {
-    const storedUser = localStorage.getItem("currentUser");
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-      setIsAuthenticated(true);
-    }
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log("Auth state changed:", event, session);
+        setSession(session);
+        
+        if (session && session.user) {
+          const authUser: AuthUser = {
+            email: session.user.email || "",
+            name: session.user.user_metadata.name as string || "",
+          };
+          
+          setUser(authUser);
+          setIsAuthenticated(true);
+          
+          // Store in localStorage for compatibility with existing code
+          localStorage.setItem("currentUser", JSON.stringify(authUser));
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+          localStorage.removeItem("currentUser");
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session && session.user) {
+        const authUser: AuthUser = {
+          email: session.user.email || "",
+          name: session.user.user_metadata.name as string || "",
+        };
+        
+        setUser(authUser);
+        setIsAuthenticated(true);
+        localStorage.setItem("currentUser", JSON.stringify(authUser));
+      } else {
+        // Fallback to localStorage for existing users
+        const storedUser = localStorage.getItem("currentUser");
+        if (storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+            setIsAuthenticated(true);
+          } catch (e) {
+            console.error("Error parsing stored user:", e);
+            localStorage.removeItem("currentUser");
+          }
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        console.error("Supabase login error:", error);
+        
+        // Fallback to localStorage login for existing users
+        const users = getLocalUsers();
+        
+        if (users[email] && users[email].password === password) {
+          const currentUser = { 
+            email,
+            name: users[email].name
+          };
+          
+          setUser(currentUser);
+          setIsAuthenticated(true);
+          localStorage.setItem("currentUser", JSON.stringify(currentUser));
+          
+          return true;
+        }
+        
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Login error:", error);
+      
+      // Fallback to localStorage
+      return fallbackLogin(email, password);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
     
-    const users = getUsers();
+    // Clear local state regardless
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem("currentUser");
+  };
+
+  const register = async (email: string, password: string, name?: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name }
+        }
+      });
+      
+      if (error) {
+        console.error("Supabase registration error:", error);
+        
+        // Fallback to localStorage registration
+        return fallbackRegister(email, password, name);
+      }
+      
+      toast.success("Registration successful! Check your email for verification.");
+      return true;
+    } catch (error) {
+      console.error("Registration error:", error);
+      
+      // Fallback to localStorage
+      return fallbackRegister(email, password, name);
+    }
+  };
+
+  // Helper functions for localStorage fallback
+  const getLocalUsers = (): Record<string, { password: string; name?: string }> => {
+    const users = localStorage.getItem("users");
+    return users ? JSON.parse(users) : {};
+  };
+
+  const saveLocalUsers = (users: Record<string, { password: string; name?: string }>) => {
+    localStorage.setItem("users", JSON.stringify(users));
+  };
+
+  const fallbackLogin = (email: string, password: string): boolean => {
+    const users = getLocalUsers();
     
     if (users[email] && users[email].password === password) {
       const currentUser = { 
@@ -54,8 +182,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setUser(currentUser);
       setIsAuthenticated(true);
-      
-      // Save to localStorage for persistent session
       localStorage.setItem("currentUser", JSON.stringify(currentUser));
       
       return true;
@@ -64,17 +190,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem("currentUser");
-  };
-
-  const register = async (email: string, password: string, name?: string): Promise<boolean> => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const users = getUsers();
+  const fallbackRegister = (email: string, password: string, name?: string): boolean => {
+    const users = getLocalUsers();
     
     // Check if user already exists
     if (users[email]) {
@@ -83,10 +200,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Add new user
     users[email] = { password, name };
-    saveUsers(users);
+    saveLocalUsers(users);
     
     // Auto login after registration
-    return login(email, password);
+    return fallbackLogin(email, password);
   };
 
   return (
