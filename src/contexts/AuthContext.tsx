@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
@@ -17,16 +16,14 @@ type AuthContextType = {
   register: (email: string, password: string, name?: string) => Promise<boolean>;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Initialize auth state and set up listener
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("Auth state changed:", event, session);
@@ -41,7 +38,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(authUser);
           setIsAuthenticated(true);
           
-          // Store in localStorage for compatibility with existing code
           localStorage.setItem("currentUser", JSON.stringify(authUser));
         } else {
           setUser(null);
@@ -51,7 +47,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session && session.user) {
         const authUser: AuthUser = {
@@ -63,7 +58,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAuthenticated(true);
         localStorage.setItem("currentUser", JSON.stringify(authUser));
       } else {
-        // Fallback to localStorage for existing users
         const storedUser = localStorage.getItem("currentUser");
         if (storedUser) {
           try {
@@ -93,7 +87,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error("Supabase login error:", error);
         
-        // Fallback to localStorage login for existing users
         const users = getLocalUsers();
         
         if (users[email] && users[email].password === password) {
@@ -116,7 +109,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error("Login error:", error);
       
-      // Fallback to localStorage
       return fallbackLogin(email, password);
     }
   };
@@ -128,7 +120,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("Logout error:", error);
     }
     
-    // Clear local state regardless
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem("currentUser");
@@ -147,7 +138,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error("Supabase registration error:", error);
         
-        // Fallback to localStorage registration
         return fallbackRegister(email, password, name);
       }
       
@@ -156,12 +146,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error("Registration error:", error);
       
-      // Fallback to localStorage
       return fallbackRegister(email, password, name);
     }
   };
 
-  // Helper functions for localStorage fallback
   const getLocalUsers = (): Record<string, { password: string; name?: string }> => {
     const users = localStorage.getItem("users");
     return users ? JSON.parse(users) : {};
@@ -193,16 +181,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fallbackRegister = (email: string, password: string, name?: string): boolean => {
     const users = getLocalUsers();
     
-    // Check if user already exists
     if (users[email]) {
       return false;
     }
     
-    // Add new user
     users[email] = { password, name };
     saveLocalUsers(users);
     
-    // Auto login after registration
     return fallbackLogin(email, password);
   };
 
@@ -211,12 +196,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 };
