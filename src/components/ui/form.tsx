@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { Slot } from "@radix-ui/react-slot"
@@ -164,6 +165,32 @@ const FormMessage = React.forwardRef<
 })
 FormMessage.displayName = "FormMessage"
 
+const FormStep = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    isActive?: boolean;
+    title?: string;
+    description?: string;
+  }
+>(({ className, children, isActive = false, title, description, ...props }, ref) => {
+  if (!isActive) return null;
+  
+  return (
+    <div ref={ref} className={cn("space-y-6", className)} {...props}>
+      {title && (
+        <div className="space-y-2">
+          <h3 className="text-xl font-semibold">{title}</h3>
+          {description && (
+            <p className="text-sm text-muted-foreground">{description}</p>
+          )}
+        </div>
+      )}
+      {children}
+    </div>
+  );
+});
+FormStep.displayName = "FormStep";
+
 export {
   useFormField,
   Form,
@@ -173,4 +200,5 @@ export {
   FormDescription,
   FormMessage,
   FormField,
+  FormStep,
 }

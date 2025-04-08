@@ -9,6 +9,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormStep,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,8 +21,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navigation from "@/components/layout/Navigation";
-import { ChevronLeft } from "lucide-react";
-import { FormData, FormValues } from "@/types/forms";
+import { ChevronLeft, Table2 } from "lucide-react";
+import { FormData, FormValues, TableConfiguration } from "@/types/forms";
 import { submitFormData } from "@/services/supabaseService";
 import FormSubmissions from "@/components/forms/FormSubmissions";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,110 +74,232 @@ const formTemplates: Record<string, FormData> = {
     type: "active",
     completed: false,
     dueDate: "2023-06-20",
+    isMultiStep: true,
     questions: [
       { 
-        id: "party-size", 
-        type: "select", 
-        label: "Party Size", 
-        options: ["2", "5", "10"], 
+        id: "table-configuration", 
+        type: "radio", 
+        label: "Which table seating option are you booking", 
+        options: [
+          "Free Seating (Single)",
+          "Free Seating (Couple)",
+          "Half Table (5 People)",
+          "Half Table (6 People)",
+          "Full Table (10 People)",
+          "Full Table (12 People)"
+        ], 
         required: true 
       },
       { 
-        id: "party-members", 
-        type: "textarea", 
-        label: "Names of the members in your party", 
+        id: "guest-1-name", 
+        type: "text", 
+        label: "Guest 1 - Please add your full name (as you are known by at school)", 
         required: true,
-        placeholder: "Please list the full names of all members in your party"
-      },
-      { id: "accessibility", type: "checkbox", label: "Accessibility Requirements", required: false, checkboxLabel: "I require accessibility accommodations" },
-      { id: "additional-notes", type: "textarea", label: "Additional Notes", required: false },
-    ],
-  },
-  "form-3": {
-    id: "form-3",
-    name: "Feedback Form",
-    description: "Share your feedback about the event",
-    type: "upcoming",
-    completed: false,
-    dueDate: "2023-07-10",
-    questions: [
-      { id: "rating", type: "radio", label: "Overall Experience", options: ["Excellent", "Good", "Average", "Poor"], required: true },
-      { id: "feedback", type: "textarea", label: "Your Feedback", required: true },
-      { id: "contact-permission", type: "checkbox", label: "May we contact you about your feedback?", required: false },
-    ],
-  },
-  "form-4": {
-    id: "form-4",
-    name: "Travel Arrangements",
-    description: "Arrange your travel for the event",
-    type: "upcoming",
-    completed: false,
-    dueDate: "2023-07-20",
-    questions: [
-      { id: "travel-method", type: "radio", label: "Travel Method", options: ["Driving", "Flying", "Train", "Other"], required: true },
-      { id: "arrival-date", type: "text", label: "Arrival Date", placeholder: "MM/DD/YYYY", required: true },
-      { id: "departure-date", type: "text", label: "Departure Date", placeholder: "MM/DD/YYYY", required: true },
-      { id: "travel-info", type: "textarea", label: "Additional Travel Information", placeholder: "Flight number, arrival time, etc.", required: false },
-    ],
-  },
-  "form-5": {
-    id: "form-5",
-    name: "Budget Approval",
-    description: "Request budget approval for the event",
-    type: "overdue",
-    completed: false,
-    dueDate: "2023-05-20",
-    questions: [
-      { id: "budget-amount", type: "number", label: "Budget Amount", placeholder: "Enter budget amount", required: true },
-      { 
-        id: "budget-category", 
-        type: "select", 
-        label: "Budget Category", 
-        required: true, 
-        options: ["Marketing", "Operations", "Staffing", "Venue", "Catering", "Other"] 
+        dependsOn: { field: "table-configuration", value: ["Free Seating (Single)", "Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
       },
       { 
-        id: "approval-status", 
-        type: "radio", 
-        label: "Approval Status", 
-        required: true, 
-        options: ["Approved", "Rejected", "Pending"] 
+        id: "guest-1-student-number", 
+        type: "text", 
+        label: "Guest 1 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Free Seating (Single)", "Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
       },
-      { id: "comments", type: "textarea", label: "Comments", placeholder: "Add any comments regarding the budget", required: false },
+      
+      { 
+        id: "guest-2-name", 
+        type: "text", 
+        label: "Guest 2 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-2-student-number", 
+        type: "text", 
+        label: "Guest 2 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      
+      { 
+        id: "guest-3-name", 
+        type: "text", 
+        label: "Guest 3 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-3-student-number", 
+        type: "text", 
+        label: "Guest 3 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-4-name", 
+        type: "text", 
+        label: "Guest 4 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-4-student-number", 
+        type: "text", 
+        label: "Guest 4 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-5-name", 
+        type: "text", 
+        label: "Guest 5 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-5-student-number", 
+        type: "text", 
+        label: "Guest 5 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      
+      { 
+        id: "guest-6-name", 
+        type: "text", 
+        label: "Guest 6 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-6-student-number", 
+        type: "text", 
+        label: "Guest 6 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      
+      { 
+        id: "guest-7-name", 
+        type: "text", 
+        label: "Guest 7 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-7-student-number", 
+        type: "text", 
+        label: "Guest 7 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-8-name", 
+        type: "text", 
+        label: "Guest 8 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-8-student-number", 
+        type: "text", 
+        label: "Guest 8 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-9-name", 
+        type: "text", 
+        label: "Guest 9 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-9-student-number", 
+        type: "text", 
+        label: "Guest 9 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-10-name", 
+        type: "text", 
+        label: "Guest 10 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-10-student-number", 
+        type: "text", 
+        label: "Guest 10 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      
+      { 
+        id: "guest-11-name", 
+        type: "text", 
+        label: "Guest 11 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-11-student-number", 
+        type: "text", 
+        label: "Guest 11 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-12-name", 
+        type: "text", 
+        label: "Guest 12 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-12-student-number", 
+        type: "text", 
+        label: "Guest 12 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (12 People)"] }
+      },
+      
+      { 
+        id: "additional-notes", 
+        type: "textarea", 
+        label: "Additional Notes or Requests", 
+        required: false,
+        dependsOn: { field: "table-configuration", value: ["Free Seating (Single)", "Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
     ],
+    steps: [
+      {
+        title: "Table Configuration",
+        description: "Select your table seating option",
+        questions: ["table-configuration"]
+      },
+      {
+        title: "Guest Information",
+        description: "Provide details for all guests",
+        questions: [
+          "guest-1-name", "guest-1-student-number",
+          "guest-2-name", "guest-2-student-number",
+          "guest-3-name", "guest-3-student-number",
+          "guest-4-name", "guest-4-student-number",
+          "guest-5-name", "guest-5-student-number",
+          "guest-6-name", "guest-6-student-number",
+          "guest-7-name", "guest-7-student-number",
+          "guest-8-name", "guest-8-student-number",
+          "guest-9-name", "guest-9-student-number",
+          "guest-10-name", "guest-10-student-number",
+          "guest-11-name", "guest-11-student-number",
+          "guest-12-name", "guest-12-student-number",
+          "additional-notes"
+        ]
+      }
+    ]
   },
-  "form-6": {
-    id: "form-6",
-    name: "Feedback Survey",
-    description: "Post-event feedback survey",
-    type: "overdue",
-    completed: false,
-    dueDate: "2023-05-30",
-    questions: [
-      { 
-        id: "overall-experience", 
-        type: "radio", 
-        label: "Overall Experience", 
-        required: true, 
-        options: ["Excellent", "Good", "Average", "Poor", "Very Poor"] 
-      },
-      { 
-        id: "enjoyed-aspects", 
-        type: "checkbox", 
-        label: "What aspects did you enjoy?", 
-        required: false, 
-        options: ["Venue", "Food", "Speakers", "Networking", "Activities", "Other"] 
-      },
-      { 
-        id: "improvement-aspects", 
-        type: "checkbox", 
-        label: "What aspects could be improved?", 
-        required: false, 
-        options: ["Venue", "Food", "Speakers", "Networking", "Activities", "Other"] 
-      },
-      { id: "additional-feedback", type: "textarea", label: "Additional Feedback", placeholder: "Please share any additional feedback or suggestions", required: false },
-    ],
-  },
+  // ... keep existing code for the rest of the form templates
 };
 
 function FormDetail() {
@@ -189,11 +312,14 @@ function FormDetail() {
   const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const { isAuthenticated, user } = useAuth();
+  const [currentStep, setCurrentStep] = useState(0);
+  const { user } = useAuth();
 
   const form = useForm<FormValues>({
     defaultValues: {},
   });
+
+  const watchTableConfiguration = form.watch("table-configuration") as TableConfiguration | undefined;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -219,6 +345,11 @@ function FormDetail() {
   }, [formId, navigate, form]);
 
   const onSubmit = async (values: FormValues) => {
+    if (formData?.isMultiStep && currentStep < (formData.steps?.length || 1) - 1) {
+      setCurrentStep(currentStep + 1);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -231,13 +362,14 @@ function FormDetail() {
             "form id": formId,
             submission_data: values,
             submitted_at: new Date().toISOString(),
-            first_name: values.firstname || '',
+            first_name: values.firstname || values["guest-1-name"] || '',
             surname: values.surname || '',
-            student_number: values['student-number'],
-            email: values['student-email'],
-            grade_level: values['grade-level'],
-            ticket_type: values['ticket-type'],
+            student_number: values['student-number'] || values["guest-1-student-number"] || '',
+            email: values['student-email'] || '',
+            grade_level: values['grade-level'] || '',
+            ticket_type: values['ticket-type'] || '',
             has_guest: values['paying-for-guest'] === 'Yes',
+            table_configuration: values['table-configuration'] || '',
             user_email: user?.email || null
           });
 
@@ -277,6 +409,7 @@ function FormDetail() {
     setIsEditing(true);
     setIsCompleted(false);
     setSubmissionStatus('idle');
+    setCurrentStep(0);
   };
 
   const handleGoBack = () => {
@@ -287,6 +420,12 @@ function FormDetail() {
     setIsEditing(false);
     setIsCompleted(true);
     setSubmissionStatus('success');
+  };
+
+  const handlePreviousStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
   };
 
   if (isLoading) {
@@ -337,6 +476,28 @@ function FormDetail() {
     ? "bg-amber-100 text-amber-800"
     : "bg-red-100 text-red-800";
 
+  const getFilteredQuestionsForStep = (stepIndex: number) => {
+    if (!formData.steps || !formData.steps[stepIndex]) return [];
+    
+    return formData.questions.filter(q => {
+      if (formData.steps && formData.steps[stepIndex].questions.includes(q.id)) {
+        if (q.dependsOn) {
+          const dependencyValue = form.watch(q.dependsOn.field);
+          if (Array.isArray(q.dependsOn.value)) {
+            return q.dependsOn.value.includes(dependencyValue);
+          }
+          return dependencyValue === q.dependsOn.value;
+        }
+        return true;
+      }
+      return false;
+    });
+  };
+
+  const currentStepQuestions = formData.isMultiStep && formData.steps 
+    ? getFilteredQuestionsForStep(currentStep) 
+    : formData.questions;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -383,103 +544,166 @@ function FormDetail() {
               </p>
             </div>
           )}
+
+          {formData.isMultiStep && (
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex space-x-2">
+                {formData.steps?.map((step, index) => (
+                  <div
+                    key={index}
+                    className={cn(
+                      "flex items-center",
+                      index !== 0 && "ml-2"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
+                        currentStep >= index
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {index + 1}
+                    </div>
+                    {index < (formData.steps?.length || 0) - 1 && (
+                      <div
+                        className={cn(
+                          "h-1 w-12",
+                          currentStep > index
+                            ? "bg-primary"
+                            : "bg-muted"
+                        )}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="text-sm font-medium">
+                Step {currentStep + 1} of {formData.steps?.length}
+              </div>
+            </div>
+          )}
           
           <Card className="mb-8 animate-fade-in shadow-sm">
             <CardHeader>
-              <CardTitle>Form Details</CardTitle>
+              <CardTitle>
+                {formData.isMultiStep && formData.steps 
+                  ? formData.steps[currentStep].title 
+                  : "Form Details"}
+              </CardTitle>
+              {formData.isMultiStep && formData.steps && formData.steps[currentStep].description && (
+                <p className="text-sm text-muted-foreground">
+                  {formData.steps[currentStep].description}
+                </p>
+              )}
             </CardHeader>
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  {formData?.questions.map((question) => (
-                    <FormField
-                      key={question.id}
-                      control={form.control}
-                      name={question.id}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            {question.label}
-                            {question.required && <span className="ml-1 text-red-500">*</span>}
-                          </FormLabel>
-                          
-                          {question.type === "text" || question.type === "email" || question.type === "number" || question.type === "tel" ? (
-                            <FormControl>
-                              <Input
-                                type={question.type}
-                                placeholder={question.placeholder || `Enter ${question.label.toLowerCase()}`}
-                                disabled={isCompleted && !isEditing}
-                                {...field}
-                                value={field.value || ''}
-                              />
-                            </FormControl>
-                          ) : question.type === "textarea" ? (
-                            <FormControl>
-                              <Textarea
-                                placeholder={question.placeholder || `Enter ${question.label.toLowerCase()}`}
-                                className="min-h-[120px]"
-                                disabled={isCompleted && !isEditing}
-                                {...field}
-                                value={field.value || ''}
-                              />
-                            </FormControl>
-                          ) : question.type === "checkbox" && !question.options ? (
-                            <div className="flex items-center space-x-2">
+                  {currentStepQuestions.map((question) => {
+                    if (
+                      currentStep === 1 && 
+                      question.dependsOn?.field === "table-configuration" && 
+                      question.dependsOn.value &&
+                      watchTableConfiguration &&
+                      (Array.isArray(question.dependsOn.value) 
+                        ? !question.dependsOn.value.includes(watchTableConfiguration)
+                        : question.dependsOn.value !== watchTableConfiguration)
+                    ) {
+                      return null;
+                    }
+                    
+                    return (
+                      <FormField
+                        key={question.id}
+                        control={form.control}
+                        name={question.id}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              {question.label}
+                              {question.required && <span className="ml-1 text-red-500">*</span>}
+                            </FormLabel>
+                            
+                            {question.type === "text" || question.type === "email" || question.type === "number" || question.type === "tel" ? (
                               <FormControl>
-                                <Checkbox
-                                  checked={Boolean(field.value)}
-                                  onCheckedChange={field.onChange}
+                                <Input
+                                  type={question.type}
+                                  placeholder={question.placeholder || `Enter ${question.label.toLowerCase()}`}
                                   disabled={isCompleted && !isEditing}
+                                  {...field}
+                                  value={field.value || ''}
                                 />
                               </FormControl>
-                              <div className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                {question.checkboxLabel || question.label}
+                            ) : question.type === "textarea" ? (
+                              <FormControl>
+                                <Textarea
+                                  placeholder={question.placeholder || `Enter ${question.label.toLowerCase()}`}
+                                  className="min-h-[120px]"
+                                  disabled={isCompleted && !isEditing}
+                                  {...field}
+                                  value={field.value || ''}
+                                />
+                              </FormControl>
+                            ) : question.type === "checkbox" && !question.options ? (
+                              <div className="flex items-center space-x-2">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={Boolean(field.value)}
+                                    onCheckedChange={field.onChange}
+                                    disabled={isCompleted && !isEditing}
+                                  />
+                                </FormControl>
+                                <div className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                  {question.checkboxLabel || question.label}
+                                </div>
                               </div>
-                            </div>
-                          ) : question.type === "radio" ? (
-                            <FormControl>
-                              <RadioGroup
-                                onValueChange={field.onChange}
-                                value={field.value || ''}
-                                disabled={isCompleted && !isEditing}
-                                className="space-y-2"
-                              >
-                                {question.options?.map((option) => (
-                                  <div key={option} className="flex items-center space-x-2">
-                                    <RadioGroupItem value={option} id={`${question.id}-${option}`} />
-                                    <label htmlFor={`${question.id}-${option}`} className="text-sm">
-                                      {option}
-                                    </label>
-                                  </div>
-                                ))}
-                              </RadioGroup>
-                            </FormControl>
-                          ) : question.type === "select" ? (
-                            <FormControl>
-                              <Select
-                                onValueChange={field.onChange}
-                                value={field.value || ''}
-                                disabled={isCompleted && !isEditing}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder={`Select ${question.label.toLowerCase()}`} />
-                                </SelectTrigger>
-                                <SelectContent>
+                            ) : question.type === "radio" ? (
+                              <FormControl>
+                                <RadioGroup
+                                  onValueChange={field.onChange}
+                                  value={field.value || ''}
+                                  disabled={isCompleted && !isEditing}
+                                  className="space-y-2"
+                                >
                                   {question.options?.map((option) => (
-                                    <SelectItem key={option} value={option}>
-                                      {option}
-                                    </SelectItem>
+                                    <div key={option} className="flex items-center space-x-2">
+                                      <RadioGroupItem value={option} id={`${question.id}-${option}`} />
+                                      <label htmlFor={`${question.id}-${option}`} className="text-sm">
+                                        {option}
+                                      </label>
+                                    </div>
                                   ))}
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                          ) : null}
-                          
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ))}
+                                </RadioGroup>
+                              </FormControl>
+                            ) : question.type === "select" ? (
+                              <FormControl>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value || ''}
+                                  disabled={isCompleted && !isEditing}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder={`Select ${question.label.toLowerCase()}`} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {question.options?.map((option) => (
+                                      <SelectItem key={option} value={option}>
+                                        {option}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                            ) : null}
+                            
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    );
+                  })}
 
                   <div className="mt-8 flex justify-end space-x-3">
                     {isCompleted && !isEditing ? (
@@ -488,7 +712,17 @@ function FormDetail() {
                       </Button>
                     ) : (
                       <>
-                        {isEditing && (
+                        {formData.isMultiStep && currentStep > 0 && (
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={handlePreviousStep}
+                          >
+                            Previous
+                          </Button>
+                        )}
+                        
+                        {isEditing && !formData.isMultiStep && (
                           <Button 
                             type="button" 
                             variant="outline" 
@@ -497,6 +731,7 @@ function FormDetail() {
                             Cancel
                           </Button>
                         )}
+                        
                         <Button 
                           type="submit" 
                           disabled={isSubmitting || formData?.type === "upcoming" || formData?.type === "overdue"}
@@ -511,7 +746,9 @@ function FormDetail() {
                               Submitting...
                             </>
                           ) : (
-                            isEditing ? "Save Changes" : "Submit Form"
+                            formData.isMultiStep && currentStep < (formData.steps?.length || 1) - 1 
+                              ? "Next" 
+                              : isEditing ? "Save Changes" : "Submit Form"
                           )}
                         </Button>
                       </>

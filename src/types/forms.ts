@@ -16,6 +16,10 @@ export interface FormQuestion {
   options?: string[]; // For select, radio, checkbox
   value?: string | boolean;
   checkboxLabel?: string;
+  dependsOn?: {
+    field: string;
+    value: string | string[];
+  };
 }
 
 export interface FormData {
@@ -28,7 +32,21 @@ export interface FormData {
   dueDate: string;
   type: 'active' | 'upcoming' | 'overdue';
   fields?: FormQuestion[];
+  isMultiStep?: boolean;
+  steps?: {
+    title: string;
+    description?: string;
+    questions: string[]; // IDs of questions for this step
+  }[];
 }
 
 // Fix the FormValues type to properly handle form field values based on their types
 export type FormValues = Record<string, any>;
+
+export type TableConfiguration = 
+  | 'Free Seating (Single)'
+  | 'Free Seating (Couple)'
+  | 'Half Table (5 People)'
+  | 'Half Table (6 People)'
+  | 'Full Table (10 People)'
+  | 'Full Table (12 People)';
