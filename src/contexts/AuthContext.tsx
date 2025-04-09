@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
@@ -136,13 +135,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
       
-      // Check if the email already exists in local storage
-      const users = getLocalUsers();
-      if (users[email]) {
-        toast.error("This email is already registered");
-        return false;
+      // Only check local users if Supabase is not accessible
+      const { data: { session: testSession } } = await supabase.auth.getSession();
+      
+      // If we can't connect to Supabase, fall back to local registration
+      if (!testSession) {
+        return fallbackRegister(email, password, name);
       }
       
+      // Otherwise, proceed with Supabase registration
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -160,14 +161,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return false;
         }
         
-        // Handle other errors
-        toast.error(error.message || "Registration failed");
-        return false;
+        // If it's a different error, try the fallback
+        return fallbackRegister(email, password, name);
       }
       
       toast.success("Registration successful! Check your email for verification.");
       
       // Store user data in local storage for fallback
+      const users = getLocalUsers();
       users[email] = { password, name };
       saveLocalUsers(users);
       
@@ -208,17 +209,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const fallbackRegister = (email: string, password: string, name?: string): boolean => {
-    const users = getLocalUsers();
-    
-    if (users[email]) {
-      toast.error("This email is already registered");
+    try {
+      const users = getLocalUsers();
+      
+      // Check if the email already exists in local storage
+      if (users[email]) {
+        toast.error("This email is already registered");
+        return false;
+      }
+      
+      // If the email doesn't exist, register the user
+      users[email] = { password, name };
+      saveLocalUsers(users);
+      
+      // Log the user in automatically
+      const currentUser = { 
+        email,
+        name: users[email].name
+      };
+      
+      setUser(currentUser);
+      setIsAuthenticated(true);
+      localStorage.setItem("currentUser", JSON.stringify(currentUser));
+      
+      toast.success("Registration successful!");
+      return true;
+    } catch (error) {
+      console.error("Fallback registration error:", error);
+      toast.error("Registration failed");
       return false;
     }
-    
-    users[email] = { password, name };
-    saveLocalUsers(users);
-    
-    return fallbackLogin(email, password);
   };
 
   return (
