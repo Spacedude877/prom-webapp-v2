@@ -136,6 +136,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
       
+      // Check if the email already exists in local storage
+      const users = getLocalUsers();
+      if (users[email]) {
+        toast.error("This email is already registered");
+        return false;
+      }
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -147,13 +154,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error("Supabase registration error:", error);
         
-        return fallbackRegister(email, password, name);
+        // Check if error is specifically about existing user
+        if (error.message.includes("already registered")) {
+          toast.error("This email is already registered");
+          return false;
+        }
+        
+        // Handle other errors
+        toast.error(error.message || "Registration failed");
+        return false;
       }
       
       toast.success("Registration successful! Check your email for verification.");
       
       // Store user data in local storage for fallback
-      const users = getLocalUsers();
       users[email] = { password, name };
       saveLocalUsers(users);
       
@@ -197,6 +211,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const users = getLocalUsers();
     
     if (users[email]) {
+      toast.error("This email is already registered");
       return false;
     }
     
