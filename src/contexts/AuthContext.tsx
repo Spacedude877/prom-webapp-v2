@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
@@ -24,6 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("Auth state changed:", event, session);
@@ -47,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session && session.user) {
         const authUser: AuthUser = {
@@ -58,6 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAuthenticated(true);
         localStorage.setItem("currentUser", JSON.stringify(authUser));
       } else {
+        // Try to get user from localStorage if no active session
         const storedUser = localStorage.getItem("currentUser");
         if (storedUser) {
           try {
@@ -127,6 +131,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (email: string, password: string, name?: string): Promise<boolean> => {
     try {
+      if (password.length < 6) {
+        toast.error("Password should be at least 6 characters.");
+        return false;
+      }
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -142,6 +151,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       toast.success("Registration successful! Check your email for verification.");
+      
+      // Store user data in local storage for fallback
+      const users = getLocalUsers();
+      users[email] = { password, name };
+      saveLocalUsers(users);
+      
       return true;
     } catch (error) {
       console.error("Registration error:", error);
