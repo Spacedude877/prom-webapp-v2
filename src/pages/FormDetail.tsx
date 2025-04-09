@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -313,7 +314,7 @@ function FormDetail() {
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const form = useForm<FormValues>({
     defaultValues: {},
@@ -326,7 +327,14 @@ function FormDetail() {
       if (formId && formId in formTemplates) {
         const template = formTemplates[formId];
         setFormData(template);
-        setIsCompleted(template.completed || false);
+        
+        // If user is authenticated, check if they have already completed this form
+        if (isAuthenticated && user) {
+          // Load user's submission for this form (if any)
+          checkUserFormSubmission(formId, user.email);
+        } else {
+          setIsCompleted(template.completed || false);
+        }
         
         const initialValues: Record<string, any> = {};
         template.questions.forEach((field) => {
@@ -342,7 +350,42 @@ function FormDetail() {
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [formId, navigate, form]);
+  }, [formId, navigate, form, isAuthenticated, user]);
+
+  // Function to check if user has already submitted this form
+  const checkUserFormSubmission = async (formId: string, userEmail: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('form_submissions')
+        .select('*')
+        .eq('form id', formId)
+        .eq('user_email', userEmail)
+        .order('submitted_at', { ascending: false })
+        .limit(1);
+      
+      if (error) {
+        console.error("Error checking user form submission:", error);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        // User has already submitted this form
+        setIsCompleted(true);
+        
+        // If there's submission data, populate the form with it
+        if (data[0].submission_data) {
+          form.reset(data[0].submission_data);
+        }
+        
+        console.log("Found user submission:", data[0]);
+      } else {
+        // No existing submission found
+        setIsCompleted(formData?.completed || false);
+      }
+    } catch (err) {
+      console.error("Exception in checkUserFormSubmission:", err);
+    }
+  };
 
   const onSubmit = async (values: FormValues) => {
     if (formData?.isMultiStep && currentStep < (formData.steps?.length || 1) - 1) {

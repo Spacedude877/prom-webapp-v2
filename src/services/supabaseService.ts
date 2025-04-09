@@ -20,7 +20,12 @@ const createMockClient = () => {
       insert: () => Promise.resolve({ data: null, error: new Error('Mock Supabase client - No credentials provided') }),
       select: () => ({
         eq: () => ({
-          order: () => Promise.resolve({ data: [], error: null })
+          order: () => Promise.resolve({ data: [], error: null }),
+          limit: () => Promise.resolve({ data: [], error: null })
+        }),
+        eq: () => ({
+          order: () => Promise.resolve({ data: [], error: null }),
+          limit: () => Promise.resolve({ data: [], error: null })
         })
       })
     })
@@ -118,7 +123,7 @@ export const submitFormData = async (formId: string, formData: Record<string, an
 };
 
 // Add a function to retrieve guest information
-export const getGuestSubmissions = async (formId: string) => {
+export const getGuestSubmissions = async (formId: string, userEmail?: string) => {
   try {
     if (!supabaseUrl || !supabaseKey) {
       console.warn('Cannot get guest submissions: Supabase credentials missing');
@@ -130,11 +135,17 @@ export const getGuestSubmissions = async (formId: string) => {
       };
     }
     
-    const { data, error } = await supabase
+    let query = supabase
       .from('guest_info')
       .select('*')
-      .eq('form id', formId) // Use "form id" for Supabase
-      .order('created_at', { ascending: false });
+      .eq('form id', formId); // Use "form id" for Supabase
+    
+    // Filter by user email if provided
+    if (userEmail) {
+      query = query.eq('user_email', userEmail);
+    }
+    
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) throw error;
     return { success: true, data };
@@ -145,7 +156,7 @@ export const getGuestSubmissions = async (formId: string) => {
 };
 
 // Retrieve form submissions with better error handling
-export const getFormSubmissions = async (formId: string) => {
+export const getFormSubmissions = async (formId: string, userEmail?: string) => {
   try {
     if (!supabaseUrl || !supabaseKey) {
       console.warn('Cannot get submissions: Supabase credentials missing');
@@ -157,16 +168,54 @@ export const getFormSubmissions = async (formId: string) => {
       };
     }
     
-    const { data, error } = await supabase
+    let query = supabase
       .from('form_submissions')
       .select('*')
-      .eq('form id', formId) // Use "form id" for Supabase
-      .order('submitted_at', { ascending: false });
+      .eq('form id', formId); // Use "form id" for Supabase
+    
+    // Filter by user email if provided
+    if (userEmail) {
+      query = query.eq('user_email', userEmail);
+    }
+    
+    const { data, error } = await query.order('submitted_at', { ascending: false });
 
     if (error) throw error;
     return { success: true, data };
   } catch (error) {
     console.error('Error retrieving form submissions:', error);
     return { success: false, error, data: [] };
+  }
+};
+
+// Add a new function to check if a user has submitted a specific form
+export const hasUserSubmittedForm = async (formId: string, userEmail: string) => {
+  try {
+    if (!userEmail || !formId) {
+      return { success: false, data: false };
+    }
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn('Cannot check user submission: Supabase credentials missing');
+      return { 
+        success: false, 
+        error: 'Supabase configuration missing. Please check environment variables.',
+        mock: true,
+        data: false 
+      };
+    }
+    
+    const { data, error } = await supabase
+      .from('form_submissions')
+      .select('id')
+      .eq('form id', formId)
+      .eq('user_email', userEmail)
+      .limit(1);
+
+    if (error) throw error;
+    return { success: true, data: data && data.length > 0 };
+  } catch (error) {
+    console.error('Error checking user form submission:', error);
+    return { success: false, error, data: false };
   }
 };

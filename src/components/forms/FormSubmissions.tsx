@@ -2,10 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Info } from "lucide-react";
+import { Info, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { FormSubmission } from '@/types/supabase';
 import { getFormSubmissions } from '@/services/supabaseService';
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface FormSubmissionsProps {
   formId: string;
@@ -16,6 +19,8 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const [filterByUser, setFilterByUser] = useState(false);
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
     const loadSubmissions = async () => {
@@ -24,7 +29,20 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
       try {
         console.log(`Fetching form submissions for form ID: ${formId}`);
         
-        const { data, error, success } = await getFormSubmissions(formId);
+        let query = supabase
+          .from('form_submissions')
+          .select('*')
+          .eq('form id', formId);
+          
+        // If filter by user is enabled and user is authenticated, filter by user email
+        if (filterByUser && isAuthenticated && user?.email) {
+          query = query.eq('user_email', user.email);
+        }
+        
+        // Order by submitted_at, most recent first
+        query = query.order('submitted_at', { ascending: false });
+        
+        const { data, error } = await query;
         
         if (error) {
           console.error("Error fetching submissions:", error);
@@ -49,12 +67,12 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
             ticket_type: item.ticket_type,
             has_guest: item.has_guest,
             additional_info: item.additional_info,
-            user_email: item.user_email // Add the user_email field
+            user_email: item.user_email
           })) as FormSubmission[];
           
           setSubmissions(transformedData || []);
           setError(null);
-          setIsDemoMode(!success);
+          setIsDemoMode(false);
         }
       } catch (err: any) {
         console.error("Exception in loadSubmissions:", err);
@@ -66,7 +84,7 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
     };
 
     loadSubmissions();
-  }, [formId]);
+  }, [formId, filterByUser, isAuthenticated, user]);
 
   if (isLoading) {
     return (
@@ -117,49 +135,60 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
     );
   }
 
-  if (submissions.length === 0) {
-    return (
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Submissions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-500">No submissions yet.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card className="mt-6">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle>Submissions ({submissions.length})</CardTitle>
+        {isAuthenticated && (
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="filter-user" 
+              checked={filterByUser}
+              onCheckedChange={(checked) => setFilterByUser(checked as boolean)}
+            />
+            <label 
+              htmlFor="filter-user" 
+              className="text-sm font-medium cursor-pointer flex items-center"
+            >
+              <Filter className="h-4 w-4 mr-1" />
+              Show only my submissions
+            </label>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {submissions.map((submission) => (
-            <div key={submission.id} className="border rounded-md p-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-500">
-                  Submitted: {new Date(submission.submitted_at).toLocaleString()}
-                </span>
-                {submission.user_email && (
-                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                    by: {submission.user_email}
+        {submissions.length === 0 ? (
+          <p className="text-gray-500">
+            {filterByUser 
+              ? "You haven't submitted any forms yet." 
+              : "No submissions yet."}
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {submissions.map((submission) => (
+              <div key={submission.id} className="border rounded-md p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-500">
+                    Submitted: {new Date(submission.submitted_at).toLocaleString()}
                   </span>
-                )}
+                  {submission.user_email && (
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                      by: {submission.user_email}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {Object.entries(submission.submission_data).map(([key, value]) => (
+                    <div key={key} className="grid grid-cols-3 gap-2">
+                      <span className="text-sm font-medium">{key}:</span>
+                      <span className="text-sm col-span-2">{String(value)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="space-y-2">
-                {Object.entries(submission.submission_data).map(([key, value]) => (
-                  <div key={key} className="grid grid-cols-3 gap-2">
-                    <span className="text-sm font-medium">{key}:</span>
-                    <span className="text-sm col-span-2">{String(value)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
