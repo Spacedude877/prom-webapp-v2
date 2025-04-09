@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, User } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -88,9 +88,18 @@ const Navigation = () => {
           <div className="hidden md:flex items-center gap-4">
             {isAuthenticated ? (
               <>
-                <span className="text-sm font-medium text-gray-600">
-                  {user?.name || user?.email}
-                </span>
+                <Link
+                  to="/profile"
+                  className={cn(
+                    "text-sm font-medium flex items-center gap-1 transition-colors hover:text-[#7E69AB]",
+                    location.pathname === "/profile"
+                      ? "text-[#7E69AB]"
+                      : "text-gray-600"
+                  )}
+                >
+                  <User size={16} />
+                  Profile
+                </Link>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -146,15 +155,29 @@ const Navigation = () => {
               ))}
               
               {isAuthenticated ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="flex items-center justify-start gap-1 text-gray-600 hover:bg-gray-50 rounded-md px-3 py-2"
-                >
-                  <LogOut size={16} />
-                  Logout
-                </Button>
+                <>
+                  <Link
+                    to="/profile"
+                    className={cn(
+                      "flex items-center gap-1 text-sm font-medium px-3 py-2",
+                      location.pathname === "/profile"
+                        ? "bg-gray-50 text-[#7E69AB]"
+                        : "text-gray-600 hover:bg-gray-50 rounded-md"
+                    )}
+                  >
+                    <User size={16} />
+                    Profile
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="flex items-center justify-start gap-1 text-gray-600 hover:bg-gray-50 rounded-md px-3 py-2"
+                  >
+                    <LogOut size={16} />
+                    Logout
+                  </Button>
+                </>
               ) : (
                 <Link
                   to="/login"
