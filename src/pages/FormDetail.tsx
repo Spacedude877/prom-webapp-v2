@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -38,33 +37,30 @@ const formTemplates: Record<string, FormData> = {
     completed: true,
     dueDate: "2023-06-15",
     questions: [
-      { id: "firstname", type: "text", label: "First Name", required: true, value: "Jane" },
-      { id: "surname", type: "text", label: "Surname", required: true, value: "Doe" },
-      { id: "student-number", type: "text", label: "Student Number", required: true, value: "S12345" },
-      { id: "student-email", type: "email", label: "Student Email Address", required: true, value: "jane.doe@student.edu" },
+      { id: "firstname", type: "text", label: "First Name", required: true },
+      { id: "surname", type: "text", label: "Surname", required: true },
+      { id: "student-number", type: "text", label: "Student Number", required: true },
+      { id: "student-email", type: "email", label: "Student Email Address", required: true },
       { 
         id: "grade-level", 
         type: "select", 
         label: "Grade Level", 
         required: true, 
-        options: ["Junior Grade 11", "Senior Grade 12"],
-        value: "Senior Grade 12"
+        options: ["Junior Grade 11", "Senior Grade 12"]
       },
       { 
         id: "ticket-type", 
         type: "select", 
         label: "Ticket Type", 
         required: true, 
-        options: ["Senior Early Bird HK$690", "Regular Early Bird HK$690", "Regular Ticket HK$750"],
-        value: "Senior Early Bird HK$690"
+        options: ["Senior Early Bird HK$690", "Regular Early Bird HK$690", "Regular Ticket HK$750"]
       },
       { 
         id: "paying-for-guest", 
         type: "radio", 
         label: "Are you paying for a guest?", 
         options: ["Yes", "No"], 
-        required: true,
-        value: "No"
+        required: true
       },
     ],
   },
@@ -300,7 +296,121 @@ const formTemplates: Record<string, FormData> = {
       }
     ]
   },
-  // ... keep existing code for the rest of the form templates
+  "form-3": {
+    id: "form-3",
+    name: "Dietary Preferences Form",
+    description: "Share your dietary needs for the event",
+    type: "upcoming",
+    completed: false,
+    dueDate: "2023-07-01",
+    questions: [
+      {
+        id: "dietary-restrictions",
+        type: "textarea",
+        label: "Please specify any dietary restrictions or allergies",
+        required: true,
+      },
+      {
+        id: "vegetarian-vegan",
+        type: "radio",
+        label: "Do you require a vegetarian or vegan meal?",
+        options: ["Vegetarian", "Vegan", "No preference"],
+        required: true,
+      },
+      {
+        id: "additional-notes",
+        type: "textarea",
+        label: "Additional Notes",
+        required: false,
+      },
+    ],
+  },
+  "form-4": {
+    id: "form-4",
+    name: "Travel Arrangements Form",
+    description: "Let us know your travel plans for the event",
+    type: "upcoming",
+    completed: false,
+    dueDate: "2023-07-05",
+    questions: [
+      {
+        id: "arrival-date",
+        type: "text",
+        label: "Arrival Date",
+        required: true,
+      },
+      {
+        id: "departure-date",
+        type: "text",
+        label: "Departure Date",
+        required: true,
+      },
+      {
+        id: "transportation-needs",
+        type: "textarea",
+        label: "Any specific transportation needs?",
+        required: false,
+      },
+    ],
+  },
+  "form-5": {
+    id: "form-5",
+    name: "Budget Approval Form",
+    description: "Request budget approval for your project",
+    type: "overdue",
+    completed: false,
+    dueDate: "2023-05-20",
+    questions: [
+      {
+        id: "project-name",
+        type: "text",
+        label: "Project Name",
+        required: true,
+      },
+      {
+        id: "budget-amount",
+        type: "number",
+        label: "Budget Amount (HKD)",
+        required: true,
+      },
+      {
+        id: "justification",
+        type: "textarea",
+        label: "Justification for Budget Request",
+        required: true,
+      },
+    ],
+  },
+  "form-6": {
+    id: "form-6",
+    name: "Feedback Survey Form",
+    description: "Share your feedback about the event",
+    type: "overdue",
+    completed: false,
+    dueDate: "2023-05-25",
+    questions: [
+      {
+        id: "overall-satisfaction",
+        type: "select",
+        label: "Overall Satisfaction",
+        options: ["Excellent", "Good", "Neutral", "Poor"],
+        required: true,
+      },
+      {
+        id: "recommend-event",
+        type: "radio",
+        label: "Would you recommend this event to others?",
+        options: ["Yes", "No"],
+        required: true,
+      },
+      {
+        id: "comments-suggestions",
+        type: "textarea",
+        label: "Any comments or suggestions?",
+        required: false,
+      },
+    ],
+  },
 };
 
 function FormDetail() {
@@ -336,12 +446,8 @@ function FormDetail() {
           setIsCompleted(template.completed || false);
         }
         
+        // Initialize form with empty values instead of prefilled values
         const initialValues: Record<string, any> = {};
-        template.questions.forEach((field) => {
-          if (field.value && !field.id.includes('guest') && field.id !== 'paying-for-guest') {
-            initialValues[field.id] = field.value;
-          }
-        });
         form.reset(initialValues);
       } else {
         navigate("/forms");
@@ -713,101 +819,4 @@ function FormDetail() {
                                 >
                                   {question.options?.map((option) => (
                                     <div key={option} className="flex items-center space-x-2">
-                                      <RadioGroupItem value={option} id={`${question.id}-${option}`} />
-                                      <label htmlFor={`${question.id}-${option}`} className="text-sm">
-                                        {option}
-                                      </label>
-                                    </div>
-                                  ))}
-                                </RadioGroup>
-                              </FormControl>
-                            ) : question.type === "select" ? (
-                              <FormControl>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  value={field.value || ''}
-                                  disabled={isCompleted && !isEditing}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder={`Select ${question.label.toLowerCase()}`} />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {question.options?.map((option) => (
-                                      <SelectItem key={option} value={option}>
-                                        {option}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                            ) : null}
-                            
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    );
-                  })}
-
-                  <div className="mt-8 flex justify-end space-x-3">
-                    {isCompleted && !isEditing ? (
-                      <Button type="button" onClick={handleEdit}>
-                        Edit Response
-                      </Button>
-                    ) : (
-                      <>
-                        {formData.isMultiStep && currentStep > 0 && (
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            onClick={handlePreviousStep}
-                          >
-                            Previous
-                          </Button>
-                        )}
-                        
-                        {isEditing && !formData.isMultiStep && (
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            onClick={handleCancelEdit}
-                          >
-                            Cancel
-                          </Button>
-                        )}
-                        
-                        <Button 
-                          type="submit" 
-                          disabled={isSubmitting || formData?.type === "upcoming" || formData?.type === "overdue"}
-                          className="flex items-center"
-                        >
-                          {isSubmitting ? (
-                            <>
-                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              Submitting...
-                            </>
-                          ) : (
-                            formData.isMultiStep && currentStep < (formData.steps?.length || 1) - 1 
-                              ? "Next" 
-                              : isEditing ? "Save Changes" : "Submit Form"
-                          )}
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-          
-          {formId && <FormSubmissions formId={formId} />}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default FormDetail;
+                                      <Radio
