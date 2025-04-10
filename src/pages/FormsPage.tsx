@@ -73,7 +73,7 @@ const FormsPage = () => {
           // Fetch the user's form submissions from Supabase
           const { data, error } = await supabase
             .from('form_submissions')
-            .select('form id')
+            .select('*')
             .eq('user_email', user.email);
             
           if (error) {

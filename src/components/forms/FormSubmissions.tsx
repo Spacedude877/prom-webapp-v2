@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -18,7 +19,7 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
-  const [filterByUser, setFilterByUser] = useState(false);
+  const [filterByUser, setFilterByUser] = useState(true); // Set default to true
   const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
