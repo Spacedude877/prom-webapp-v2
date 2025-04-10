@@ -1,4 +1,3 @@
-
 export interface FormItemType {
   id: string;
   title: string;
@@ -16,6 +15,7 @@ export interface FormQuestion {
   options?: string[]; // For select, radio, checkbox
   value?: string | boolean;
   checkboxLabel?: string;
+  description?: string; // Added this property to fix the TypeScript error
   dependsOn?: {
     field: string;
     value: string | string[];
