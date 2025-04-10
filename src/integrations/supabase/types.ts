@@ -18,6 +18,8 @@ export type Database = {
           grade_level: string | null
           has_guest: boolean | null
           id: string
+          qr_code: string | null
+          scan_count: number | null
           student_number: string | null
           submission_data: Json | null
           submitted_at: string
@@ -33,6 +35,8 @@ export type Database = {
           grade_level?: string | null
           has_guest?: boolean | null
           id?: string
+          qr_code?: string | null
+          scan_count?: number | null
           student_number?: string | null
           submission_data?: Json | null
           submitted_at?: string
@@ -48,6 +52,8 @@ export type Database = {
           grade_level?: string | null
           has_guest?: boolean | null
           id?: string
+          qr_code?: string | null
+          scan_count?: number | null
           student_number?: string | null
           submission_data?: Json | null
           submitted_at?: string
@@ -62,7 +68,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_unique_qr_code: {
+        Args: { submission_id: string }
+        Returns: string
+      }
+      increment_qr_code_scan_count: {
+        Args: { code: string }
+        Returns: {
+          id: string
+          first_name: string
+          surname: string
+          student_number: string
+          grade_level: string
+          scan_count: number
+          submission_data: Json
+        }[]
+      }
+      "QR code generator": {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

@@ -6,6 +6,7 @@ import { Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { FormSubmission } from '@/types/supabase';
 import { useAuth } from "@/hooks/useAuth";
+import QrCodeDisplay from './QrCodeDisplay';
 
 interface FormSubmissionsProps {
   formId: string;
@@ -143,7 +144,7 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
             You haven't submitted any forms yet.
           </p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {submissions.map((submission) => (
               <div key={submission.id} className="border rounded-md p-4">
                 <div className="flex justify-between items-center mb-2">
@@ -151,7 +152,7 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
                     Submitted: {new Date(submission.submitted_at).toLocaleString()}
                   </span>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 mb-4">
                   {Object.entries(submission.submission_data).map(([key, value]) => (
                     <div key={key} className="grid grid-cols-3 gap-2">
                       <span className="text-sm font-medium">{key}:</span>
@@ -159,6 +160,11 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
                     </div>
                   ))}
                 </div>
+                
+                {/* Show QR code only for form-1 submissions */}
+                {formId === 'form-1' && submission.id && (
+                  <QrCodeDisplay formId={formId} submissionId={submission.id} />
+                )}
               </div>
             ))}
           </div>

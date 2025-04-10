@@ -14,4 +14,17 @@ export interface FormSubmission {
   has_guest?: boolean;
   additional_info?: Record<string, any>;
   user_email?: string; // Add user_email field
+  qr_code?: string; // Add QR code field
+  scan_count?: number; // Add scan count field
+}
+
+export interface QrCodeVerification {
+  id: string;
+  first_name: string;
+  surname: string;
+  student_number: string;
+  grade_level: string;
+  scan_count: number;
+  submission_data: Record<string, any>;
+  isValid: boolean;
 }

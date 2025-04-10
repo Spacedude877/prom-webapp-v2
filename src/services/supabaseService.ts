@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/integrations/supabase/types';
-import { FormSubmission } from '@/types/supabase';
+import { FormSubmission, QrCodeVerification } from '@/types/supabase';
 
 // Initialize Supabase client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -212,5 +212,78 @@ export const hasUserSubmittedForm = async (formId: string, userEmail: string) =>
   } catch (error) {
     console.error('Error checking user form submission:', error);
     return { success: false, error, data: false };
+  }
+};
+
+// Add a new function to verify a QR code
+export const verifyQrCode = async (code: string): Promise<{ success: boolean, data: QrCodeVerification | null, error?: any }> => {
+  try {
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn('Cannot verify QR code: Supabase credentials missing');
+      return { 
+        success: false, 
+        error: 'Supabase configuration missing. Please check environment variables.',
+        data: null 
+      };
+    }
+    
+    // Call the function that increments scan count and returns data
+    const { data, error } = await supabase
+      .rpc('increment_qr_code_scan_count', { code });
+      
+    if (error) throw error;
+    
+    if (!data || data.length === 0) {
+      return { 
+        success: false, 
+        error: 'QR code not found', 
+        data: null 
+      };
+    }
+    
+    // Determine if the QR code is valid (only valid if scanned once)
+    const scanCount = data[0].scan_count || 0;
+    const isValid = scanCount === 1;
+    
+    return { 
+      success: true, 
+      data: { 
+        ...data[0], 
+        isValid 
+      } 
+    };
+  } catch (error) {
+    console.error('Error verifying QR code:', error);
+    return { success: false, error, data: null };
+  }
+};
+
+// Add a function to get the QR code for a form submission
+export const getQrCodeForSubmission = async (formId: string, submissionId: string): Promise<{ success: boolean, qrCode?: string, error?: any }> => {
+  try {
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn('Cannot get QR code: Supabase credentials missing');
+      return { 
+        success: false, 
+        error: 'Supabase configuration missing.'
+      };
+    }
+    
+    const { data, error } = await supabase
+      .from('form_submissions')
+      .select('qr_code')
+      .eq('id', submissionId)
+      .eq('form id', formId)
+      .single();
+      
+    if (error) throw error;
+    
+    return { 
+      success: true, 
+      qrCode: data?.qr_code 
+    };
+  } catch (error) {
+    console.error('Error getting QR code:', error);
+    return { success: false, error };
   }
 };
