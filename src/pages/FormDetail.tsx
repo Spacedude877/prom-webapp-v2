@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -439,15 +438,12 @@ function FormDetail() {
         const template = formTemplates[formId];
         setFormData(template);
         
-        // If user is authenticated, check if they have already completed this form
         if (isAuthenticated && user) {
-          // Load user's submission for this form (if any)
           checkUserFormSubmission(formId, user.email);
         } else {
           setIsCompleted(template.completed || false);
         }
         
-        // Initialize form with empty values instead of prefilled values
         const initialValues: Record<string, any> = {};
         form.reset(initialValues);
       } else {
@@ -475,19 +471,15 @@ function FormDetail() {
       }
       
       if (data && data.length > 0) {
-        // User has already submitted this form
         setIsCompleted(true);
         
-        // If there's submission data, populate the form with it
         if (data[0].submission_data) {
-          // Fix: Cast the submission_data to FormValues to satisfy TypeScript
           const formValues = data[0].submission_data as FormValues;
           form.reset(formValues);
         }
         
         console.log("Found user submission:", data[0]);
       } else {
-        // No existing submission found
         setIsCompleted(formData?.completed || false);
       }
     } catch (err) {
@@ -520,7 +512,6 @@ function FormDetail() {
             grade_level: values['grade-level'] || '',
             ticket_type: values['ticket-type'] || '',
             has_guest: values['paying-for-guest'] === 'Yes',
-            table_configuration: values['table-configuration'] || '',
             user_email: user?.email || null
           });
 
