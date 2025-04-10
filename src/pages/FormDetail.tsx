@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -819,4 +820,101 @@ function FormDetail() {
                                 >
                                   {question.options?.map((option) => (
                                     <div key={option} className="flex items-center space-x-2">
-                                      <Radio
+                                      <RadioGroupItem value={option} id={`${question.id}-${option}`} />
+                                      <label 
+                                        htmlFor={`${question.id}-${option}`}
+                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                      >
+                                        {option}
+                                      </label>
+                                    </div>
+                                  ))}
+                                </RadioGroup>
+                              </FormControl>
+                            ) : question.type === "select" ? (
+                              <FormControl>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                  disabled={isCompleted && !isEditing}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder={`Select ${question.label.toLowerCase()}`} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {question.options?.map((option) => (
+                                      <SelectItem key={option} value={option}>
+                                        {option}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                            ) : null}
+                            
+                            {question.description && (
+                              <FormDescription>
+                                {question.description}
+                              </FormDescription>
+                            )}
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    );
+                  })}
+                  
+                  <div className="flex justify-between mt-8">
+                    {formData.isMultiStep && currentStep > 0 ? (
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={handlePreviousStep}
+                        disabled={isSubmitting || (isCompleted && !isEditing)}
+                      >
+                        Previous
+                      </Button>
+                    ) : isEditing ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleCancelEdit}
+                      >
+                        Cancel
+                      </Button>
+                    ) : (
+                      <div></div>
+                    )}
+                    
+                    {isCompleted && !isEditing ? (
+                      <Button onClick={handleEdit}>
+                        Edit Response
+                      </Button>
+                    ) : (
+                      <Button 
+                        type="submit" 
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting 
+                          ? "Submitting..." 
+                          : formData.isMultiStep && currentStep < (formData.steps?.length || 1) - 1
+                          ? "Next"
+                          : "Submit"}
+                      </Button>
+                    )}
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+          
+          {formId && isAuthenticated && user && (
+            <FormSubmissions formId={formId} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default FormDetail;
