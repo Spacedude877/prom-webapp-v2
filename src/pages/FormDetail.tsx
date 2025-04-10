@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -352,7 +351,6 @@ function FormDetail() {
     return () => clearTimeout(timer);
   }, [formId, navigate, form, isAuthenticated, user]);
 
-  // Function to check if user has already submitted this form
   const checkUserFormSubmission = async (formId: string, userEmail: string) => {
     try {
       const { data, error } = await supabase

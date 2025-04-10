@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -58,7 +57,6 @@ const FormSubmissions = ({ formId }: FormSubmissionsProps) => {
             form_id: item["form id"], // Transform from "form id" to form_id
             submission_data: item.submission_data || {},
             submitted_at: item.submitted_at,
-            created_at: item.created_at,
             first_name: item.first_name,
             surname: item.surname,
             student_number: item.student_number,

@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/integrations/supabase/types';
 import { FormSubmission } from '@/types/supabase';
@@ -19,10 +18,6 @@ const createMockClient = () => {
     from: () => ({
       insert: () => Promise.resolve({ data: null, error: new Error('Mock Supabase client - No credentials provided') }),
       select: () => ({
-        eq: () => ({
-          order: () => Promise.resolve({ data: [], error: null }),
-          limit: () => Promise.resolve({ data: [], error: null })
-        }),
         eq: () => ({
           order: () => Promise.resolve({ data: [], error: null }),
           limit: () => Promise.resolve({ data: [], error: null })

@@ -4,7 +4,7 @@ export interface FormSubmission {
   form_id: string; // Keep as form_id for internal use
   submission_data: Record<string, any>;
   submitted_at: string;
-  created_at?: string; // Made optional since it might not always be present
+  // Removed created_at since it's not in the table schema
   // Additional fields from the Supabase schema
   first_name?: string;
   surname?: string;
