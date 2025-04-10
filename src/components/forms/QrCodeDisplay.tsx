@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getQrCodeForSubmission } from "@/services/supabaseService";
 import { QrCode, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface QrCodeDisplayProps {
   formId: string;
@@ -28,13 +28,23 @@ const QrCodeDisplay: React.FC<QrCodeDisplayProps> = ({ formId, submissionId }) =
       }
       
       try {
-        const { success, qrCode: code, error: fetchError } = await getQrCodeForSubmission(formId, submissionId);
+        console.log(`Fetching QR code for submission ID: ${submissionId}`);
         
-        if (!success || !code) {
-          setError(fetchError || "Failed to load QR code");
+        // Query Supabase directly using the client
+        const { data, error: fetchError } = await supabase
+          .from('form_submissions')
+          .select('qr_code')
+          .eq('id', submissionId)
+          .eq('form id', formId)
+          .single();
+        
+        if (fetchError || !data || !data.qr_code) {
+          console.error("Error fetching QR code:", fetchError);
+          setError(fetchError?.message || "Failed to load QR code");
           toast.error("Could not load QR code");
         } else {
-          setQrCode(code);
+          console.log("QR code retrieved:", data.qr_code);
+          setQrCode(data.qr_code);
         }
       } catch (err: any) {
         console.error("Error fetching QR code:", err);
