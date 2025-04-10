@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -372,7 +373,9 @@ function FormDetail() {
         
         // If there's submission data, populate the form with it
         if (data[0].submission_data) {
-          form.reset(data[0].submission_data);
+          // Fix: Cast the submission_data to FormValues to satisfy TypeScript
+          const formValues = data[0].submission_data as FormValues;
+          form.reset(formValues);
         }
         
         console.log("Found user submission:", data[0]);
