@@ -216,7 +216,11 @@ export const hasUserSubmittedForm = async (formId: string, userEmail: string) =>
 };
 
 // Add a new function to verify a QR code
-export const verifyQrCode = async (code: string): Promise<{ success: boolean, data: QrCodeVerification | null, error?: any }> => {
+export const verifyQrCode = async (code: string): Promise<{ 
+  success: boolean, 
+  data: QrCodeVerification | null, 
+  error?: any 
+}> => {
   try {
     if (!supabaseUrl || !supabaseKey) {
       console.warn('Cannot verify QR code: Supabase credentials missing');
@@ -227,9 +231,9 @@ export const verifyQrCode = async (code: string): Promise<{ success: boolean, da
       };
     }
     
-    // Call the function that increments scan count and returns data
+    // Call the function that verifies the QR code and handles check-in
     const { data, error } = await supabase
-      .rpc('increment_qr_code_scan_count', { code });
+      .rpc('verify_ticket', { code });
       
     if (error) throw error;
     
@@ -241,16 +245,10 @@ export const verifyQrCode = async (code: string): Promise<{ success: boolean, da
       };
     }
     
-    // Determine if the QR code is valid (only valid if scanned once)
-    const scanCount = data[0].scan_count || 0;
-    const isValid = scanCount === 1;
-    
+    // Pass through the verification result
     return { 
       success: true, 
-      data: { 
-        ...data[0], 
-        isValid 
-      } 
+      data: data[0] 
     };
   } catch (error) {
     console.error('Error verifying QR code:', error);

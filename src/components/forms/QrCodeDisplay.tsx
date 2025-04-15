@@ -33,7 +33,7 @@ const QrCodeDisplay: React.FC<QrCodeDisplayProps> = ({ formId, submissionId }) =
         // Query Supabase directly using the client
         const { data, error: fetchError } = await supabase
           .from('form_submissions')
-          .select('qr_code')
+          .select('qr_code, payment_status')
           .eq('id', submissionId)
           .eq('form id', formId)
           .single();
@@ -45,6 +45,13 @@ const QrCodeDisplay: React.FC<QrCodeDisplayProps> = ({ formId, submissionId }) =
         } else {
           console.log("QR code retrieved:", data.qr_code);
           setQrCode(data.qr_code);
+          
+          // Show payment status notification if available
+          if (data.payment_status === 'pending') {
+            toast.warning("Payment is pending. Ticket will not be valid until payment is completed.");
+          } else if (data.payment_status === 'completed') {
+            toast.success("Payment completed. Ticket is ready for check-in.");
+          }
         }
       } catch (err: any) {
         console.error("Error fetching QR code:", err);

@@ -16,6 +16,8 @@ export interface FormSubmission {
   user_email?: string; // Add user_email field
   qr_code?: string; // Add QR code field
   scan_count?: number; // Add scan count field
+  payment_status?: string; // Add payment status field
+  attendance_status?: string; // Add attendance status field
 }
 
 export interface QrCodeVerification {
@@ -26,5 +28,8 @@ export interface QrCodeVerification {
   grade_level: string;
   scan_count: number;
   submission_data: Record<string, any>;
-  isValid: boolean;
+  payment_status: string;
+  attendance_status: string;
+  is_valid: boolean;
+  message: string;
 }

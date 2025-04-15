@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { verifyQrCode } from "@/services/supabaseService";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, AlertTriangle, DollarSign } from "lucide-react";
 import Navigation from "@/components/layout/Navigation";
 import { toast } from 'sonner';
+import { supabase } from "@/integrations/supabase/client";
 
 const QrCodeVerification = () => {
   const [searchParams] = useSearchParams();
@@ -17,12 +17,16 @@ const QrCodeVerification = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [verificationData, setVerificationData] = useState<{
+    id: string;
     first_name: string;
     surname: string;
     student_number: string;
     grade_level: string;
     scan_count: number;
+    payment_status: string;
+    attendance_status: string;
     isValid: boolean;
+    message: string;
   } | null>(null);
 
   useEffect(() => {
@@ -34,18 +38,40 @@ const QrCodeVerification = () => {
       }
 
       try {
-        const { success, data, error: verifyError } = await verifyQrCode(code);
+        // Call the verifyTicket function to check payment and attendance
+        const { data, error: verifyError } = await supabase
+          .rpc('verify_ticket', { code });
         
-        if (!success || !data) {
+        if (verifyError || !data || data.length === 0) {
+          console.error("Error verifying QR code:", verifyError);
           setError(verifyError?.message || "Invalid or expired QR code");
-          toast.error("QR code verification failed");
+          toast.error("Ticket verification failed");
         } else {
-          setVerificationData(data);
+          const ticketData = data[0];
+          setVerificationData({
+            id: ticketData.id,
+            first_name: ticketData.first_name,
+            surname: ticketData.surname,
+            student_number: ticketData.student_number || 'N/A',
+            grade_level: ticketData.grade_level || 'N/A',
+            scan_count: ticketData.scan_count || 0,
+            payment_status: ticketData.payment_status || 'pending',
+            attendance_status: ticketData.attendance_status || 'not checked in',
+            isValid: ticketData.is_valid,
+            message: ticketData.message
+          });
+          
+          // Show success or warning toast based on verification result
+          if (ticketData.is_valid) {
+            toast.success("Ticket verified successfully");
+          } else {
+            toast.warning(ticketData.message);
+          }
         }
       } catch (err: any) {
         console.error("Error verifying QR code:", err);
         setError(err.message || "An unexpected error occurred");
-        toast.error("QR code verification failed");
+        toast.error("Ticket verification failed");
       } finally {
         setIsLoading(false);
       }
@@ -65,7 +91,7 @@ const QrCodeVerification = () => {
         <div className="container mx-auto px-6 py-24">
           <Card className="max-w-md mx-auto">
             <CardHeader className="text-center">
-              <CardTitle>Verifying QR Code</CardTitle>
+              <CardTitle>Verifying Ticket</CardTitle>
               <CardDescription>Please wait while we verify your ticket</CardDescription>
             </CardHeader>
             <CardContent className="flex justify-center py-8">
@@ -116,7 +142,8 @@ const QrCodeVerification = () => {
                 <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-2" />
                 <CardTitle className="text-amber-700">Invalid Ticket</CardTitle>
                 <Badge variant="destructive" className="mx-auto mt-2">
-                  ALREADY SCANNED ({verificationData?.scan_count || 0} times)
+                  {verificationData?.payment_status === 'pending' ? 'PAYMENT PENDING' : 
+                   verificationData?.attendance_status === 'checked in' ? 'ALREADY CHECKED IN' : 'INVALID TICKET'}
                 </Badge>
               </>
             )}
@@ -129,12 +156,36 @@ const QrCodeVerification = () => {
                 <div className="text-sm">{verificationData?.first_name} {verificationData?.surname}</div>
                 
                 <div className="text-sm font-medium">Student #:</div>
-                <div className="text-sm">{verificationData?.student_number || 'N/A'}</div>
+                <div className="text-sm">{verificationData?.student_number}</div>
                 
                 <div className="text-sm font-medium">Grade:</div>
-                <div className="text-sm">{verificationData?.grade_level || 'N/A'}</div>
+                <div className="text-sm">{verificationData?.grade_level}</div>
+                
+                <div className="text-sm font-medium">Payment Status:</div>
+                <div className="text-sm flex items-center">
+                  {verificationData?.payment_status === 'completed' ? (
+                    <span className="flex items-center text-green-600">
+                      <CheckCircle className="h-3 w-3 mr-1" /> Paid
+                    </span>
+                  ) : (
+                    <span className="flex items-center text-amber-600">
+                      <DollarSign className="h-3 w-3 mr-1" /> Pending
+                    </span>
+                  )}
+                </div>
+                
+                <div className="text-sm font-medium">Attendance:</div>
+                <div className="text-sm">
+                  {verificationData?.attendance_status === 'checked in' ? 'Checked In' : 'Not Checked In'}
+                </div>
               </div>
             </div>
+            
+            {!verificationData?.isValid && (
+              <div className="bg-amber-50 border border-amber-200 rounded-md p-3 text-amber-800">
+                <p className="text-sm">{verificationData?.message}</p>
+              </div>
+            )}
           </CardContent>
           
           <CardFooter className="flex justify-between">
