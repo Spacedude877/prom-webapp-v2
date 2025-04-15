@@ -1,6 +1,6 @@
-
 import { supabase } from './baseService';
 import { FormSubmission } from '@/types/supabase';
+import { Form } from '@/types/forms';
 
 // Submit form data for a specific form
 export const submitFormData = async (formId: string, formData: Record<string, any>, userEmail?: string) => {
@@ -101,5 +101,20 @@ export const hasUserSubmittedForm = async (formId: string, userEmail: string) =>
   } catch (error) {
     console.error('Error checking user form submission:', error);
     return { success: false, error, data: false };
+  }
+};
+
+export const getFormById = async (formId: string): Promise<Form | null> => {
+  try {
+    // This is a mock implementation. Replace with actual Supabase query
+    const mockForm: Form = {
+      id: formId,
+      name: `Form ${formId}`,
+      description: `Description for form ${formId}`
+    };
+    return mockForm;
+  } catch (error) {
+    console.error('Error fetching form:', error);
+    return null;
   }
 };

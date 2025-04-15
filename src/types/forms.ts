@@ -50,3 +50,10 @@ export type TableConfiguration =
   | 'Half Table (6 People)'
   | 'Full Table (10 People)'
   | 'Full Table (12 People)';
+
+export interface Form {
+  id: string;
+  name: string;
+  description: string;
+  // Add other properties as needed
+}
