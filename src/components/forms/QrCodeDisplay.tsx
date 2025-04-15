@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { QrCode, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { getQrCodeForSubmission } from "@/services/qrCodeService";
 
 interface QrCodeDisplayProps {
   formId: string;
@@ -30,28 +30,15 @@ const QrCodeDisplay: React.FC<QrCodeDisplayProps> = ({ formId, submissionId }) =
       try {
         console.log(`Fetching QR code for submission ID: ${submissionId}`);
         
-        // Query Supabase directly using the client
-        const { data, error: fetchError } = await supabase
-          .from('form_submissions')
-          .select('qr_code, payment_status')
-          .eq('id', submissionId)
-          .eq('form id', formId)
-          .single();
+        const response = await getQrCodeForSubmission(formId, submissionId);
         
-        if (fetchError || !data) {
-          console.error("Error fetching QR code:", fetchError);
-          setError(fetchError?.message || "Failed to load QR code");
+        if (!response.success || !response.qrCode) {
+          console.error("Error fetching QR code:", response.error);
+          setError(response.error?.message || "Failed to load QR code");
           toast.error("Could not load QR code");
         } else {
-          console.log("QR code retrieved:", data.qr_code);
-          setQrCode(data.qr_code);
-          
-          // Show payment status notification if available
-          if (data.payment_status === 'pending') {
-            toast.warning("Payment is pending. Ticket will not be valid until payment is completed.");
-          } else if (data.payment_status === 'completed') {
-            toast.success("Payment completed. Ticket is ready for check-in.");
-          }
+          console.log("QR code retrieved:", response.qrCode);
+          setQrCode(response.qrCode);
         }
       } catch (err: any) {
         console.error("Error fetching QR code:", err);
