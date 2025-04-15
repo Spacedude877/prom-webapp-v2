@@ -68,12 +68,14 @@ export type Database = {
       form_submissions: {
         Row: {
           additional_info: Json | null
+          attendance_status: string | null
           email: string | null
           first_name: string
           "form id": string
           grade_level: string | null
           has_guest: boolean | null
           id: string
+          payment_status: string | null
           qr_code: string | null
           scan_count: number | null
           student_number: string | null
@@ -87,12 +89,14 @@ export type Database = {
         }
         Insert: {
           additional_info?: Json | null
+          attendance_status?: string | null
           email?: string | null
           first_name: string
           "form id": string
           grade_level?: string | null
           has_guest?: boolean | null
           id?: string
+          payment_status?: string | null
           qr_code?: string | null
           scan_count?: number | null
           student_number?: string | null
@@ -106,12 +110,14 @@ export type Database = {
         }
         Update: {
           additional_info?: Json | null
+          attendance_status?: string | null
           email?: string | null
           first_name?: string
           "form id"?: string
           grade_level?: string | null
           has_guest?: boolean | null
           id?: string
+          payment_status?: string | null
           qr_code?: string | null
           scan_count?: number | null
           student_number?: string | null
@@ -281,9 +287,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      mark_ticket_as_paid: {
+        Args: { submission_id: string }
+        Returns: boolean
+      }
       url_encode: {
         Args: { input: string }
         Returns: string
+      }
+      verify_ticket: {
+        Args: { code: string }
+        Returns: {
+          id: string
+          first_name: string
+          surname: string
+          student_number: string
+          grade_level: string
+          scan_count: number
+          submission_data: Json
+          payment_status: string
+          attendance_status: string
+          is_valid: boolean
+          message: string
+        }[]
       }
     }
     Enums: {

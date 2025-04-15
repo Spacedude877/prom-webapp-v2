@@ -8,6 +8,7 @@ import { Loader2, CheckCircle, XCircle, AlertTriangle, DollarSign } from "lucide
 import Navigation from "@/components/layout/Navigation";
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
+import { QrCodeVerification as QrCodeVerificationType } from "@/types/supabase";
 
 const QrCodeVerification = () => {
   const [searchParams] = useSearchParams();
@@ -16,18 +17,7 @@ const QrCodeVerification = () => {
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [verificationData, setVerificationData] = useState<{
-    id: string;
-    first_name: string;
-    surname: string;
-    student_number: string;
-    grade_level: string;
-    scan_count: number;
-    payment_status: string;
-    attendance_status: string;
-    isValid: boolean;
-    message: string;
-  } | null>(null);
+  const [verificationData, setVerificationData] = useState<QrCodeVerificationType | null>(null);
 
   useEffect(() => {
     const verifyCode = async () => {
@@ -47,19 +37,8 @@ const QrCodeVerification = () => {
           setError(verifyError?.message || "Invalid or expired QR code");
           toast.error("Ticket verification failed");
         } else {
-          const ticketData = data[0];
-          setVerificationData({
-            id: ticketData.id,
-            first_name: ticketData.first_name,
-            surname: ticketData.surname,
-            student_number: ticketData.student_number || 'N/A',
-            grade_level: ticketData.grade_level || 'N/A',
-            scan_count: ticketData.scan_count || 0,
-            payment_status: ticketData.payment_status || 'pending',
-            attendance_status: ticketData.attendance_status || 'not checked in',
-            isValid: ticketData.is_valid,
-            message: ticketData.message
-          });
+          const ticketData = data[0] as QrCodeVerificationType;
+          setVerificationData(ticketData);
           
           // Show success or warning toast based on verification result
           if (ticketData.is_valid) {
@@ -129,7 +108,7 @@ const QrCodeVerification = () => {
       <div className="container mx-auto px-6 py-24">
         <Card className="max-w-md mx-auto border-2">
           <CardHeader className="text-center">
-            {verificationData?.isValid ? (
+            {verificationData?.is_valid ? (
               <>
                 <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
                 <CardTitle className="text-green-700">Ticket Verified</CardTitle>
@@ -181,7 +160,7 @@ const QrCodeVerification = () => {
               </div>
             </div>
             
-            {!verificationData?.isValid && (
+            {!verificationData?.is_valid && (
               <div className="bg-amber-50 border border-amber-200 rounded-md p-3 text-amber-800">
                 <p className="text-sm">{verificationData?.message}</p>
               </div>

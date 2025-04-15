@@ -38,7 +38,7 @@ const QrCodeDisplay: React.FC<QrCodeDisplayProps> = ({ formId, submissionId }) =
           .eq('form id', formId)
           .single();
         
-        if (fetchError || !data || !data.qr_code) {
+        if (fetchError || !data) {
           console.error("Error fetching QR code:", fetchError);
           setError(fetchError?.message || "Failed to load QR code");
           toast.error("Could not load QR code");
