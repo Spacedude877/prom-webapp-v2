@@ -1,6 +1,6 @@
+
 import { supabase } from './baseService';
 import { FormSubmission } from '@/types/supabase';
-import { Form } from '@/types/forms';
 
 // Submit form data for a specific form
 export const submitFormData = async (formId: string, formData: Record<string, any>, userEmail?: string) => {
@@ -101,46 +101,5 @@ export const hasUserSubmittedForm = async (formId: string, userEmail: string) =>
   } catch (error) {
     console.error('Error checking user form submission:', error);
     return { success: false, error, data: false };
-  }
-};
-
-// Retrieve the form configuration by ID from Supabase
-export const getFormById = async (formId: string): Promise<Form | null> => {
-  try {
-    if (!supabase) {
-      console.warn('Cannot load form: Supabase client not available');
-      return null;
-    }
-    // Try to fetch the form configuration from the "forms" table
-    // If your forms table is named differently, update accordingly
-    const { data, error } = await supabase
-      .from('forms')
-      .select('*')
-      .eq('id', formId)
-      .single();
-
-    if (error || !data) {
-      console.error('Error fetching form from Supabase:', error);
-      return null;
-    }
-
-    // Make sure the returned data matches the Form type
-    // Adjust this mapping if your table structure is different
-    return {
-      id: data.id,
-      name: data.name,
-      description: data.description,
-      questions: data.questions, // assumes there is a "questions" column as an array of FormQuestion
-      completed: data.completed,
-      dueDate: data.dueDate,
-      type: data.type,
-      fields: data.fields,
-      isMultiStep: data.isMultiStep,
-      steps: data.steps,
-      // add more fields if needed
-    };
-  } catch (error) {
-    console.error('Error fetching form:', error);
-    return null;
   }
 };

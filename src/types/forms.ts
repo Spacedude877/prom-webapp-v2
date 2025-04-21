@@ -1,4 +1,3 @@
-
 export interface FormItemType {
   id: string;
   title: string;
@@ -16,7 +15,7 @@ export interface FormQuestion {
   options?: string[]; // For select, radio, checkbox
   value?: string | boolean;
   checkboxLabel?: string;
-  description?: string;
+  description?: string; // Added this property to fix the TypeScript error
   dependsOn?: {
     field: string;
     value: string | string[];
@@ -51,21 +50,3 @@ export type TableConfiguration =
   | 'Half Table (6 People)'
   | 'Full Table (10 People)'
   | 'Full Table (12 People)';
-
-// Enhanced Form interface that includes basic properties but makes the FormData specific properties optional
-export interface Form {
-  id: string;
-  name: string;
-  description: string;
-  questions?: FormQuestion[];
-  completed?: boolean;
-  dueDate?: string;
-  type?: 'active' | 'upcoming' | 'overdue';
-  fields?: FormQuestion[];
-  isMultiStep?: boolean;
-  steps?: {
-    title: string;
-    description?: string;
-    questions: string[];
-  }[];
-}
