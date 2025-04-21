@@ -1,80 +1,67 @@
 
-import { supabase } from './baseService';
+// Add handler for the new guests table and qr code structure
 
-// Submit guest information
-export const submitGuestInfo = async (guestData: {
+import { supabase } from './baseService';
+import { Guest } from '@/types/supabase';
+
+// Submit a new guest (linked to attendee via attendee_id)
+export const submitGuest = async (guestData: {
+  attendee_id: string;
   first_name: string;
   surname: string;
-  student_number?: string;
-  email?: string;
+  guest_email?: string;
   grade_level?: string;
   ticket_type?: string;
-  has_guest?: boolean;
-  additional_info?: Record<string, any>;
-  form_id: string; // Keep as form_id for our internal use
-  user_email?: string; // Add user_email field
+  submission_data?: Record<string, any>;
 }) => {
   try {
     if (!supabase) {
-      console.warn('Cannot submit guest info: Supabase client not available');
-      return { 
-        success: false, 
-        error: 'Supabase configuration missing. Please check environment variables.',
-        mock: true
-      };
+      console.warn('Cannot submit guest: Supabase client not available');
+      return { success: false, error: 'Supabase unavailable' };
     }
-    
-    // Transform form_id to "form id" for Supabase
-    const supabaseData = {
-      ...guestData,
-      "form id": guestData.form_id,
-      user_email: guestData.user_email
-    };
-    
-    // Remove the form_id property
-    delete (supabaseData as any).form_id;
-    
+
+    // Generate a placeholder QR code for the guest based on their UUID after insert
     const { data, error } = await supabase
-      .from('guest_info')
-      .insert([supabaseData]);
+      .from('guests')
+      .insert({
+        ...guestData,
+        qr_code: null, // Will be updated after insert if required
+        scan_count: 0,
+        payment_status: 'pending',
+        attendance_status: 'not checked in',
+        submitted_at: new Date().toISOString(),
+      })
+      .select(); // Get the inserted guest row
 
     if (error) throw error;
-    return { success: true, data };
-  } catch (error) {
-    console.error('Error submitting guest information:', error);
-    return { success: false, error };
+
+    const guest = data?.[0];
+    if (guest) {
+      // Optionally generate and save a QR code here, e.g., using guest.id
+      // For now, assume the backend (trigger) or another service sets qr_code using guest.id
+      return { success: true, data: guest };
+    }
+    return { success: false, error: "Guest insertion failed" };
+  } catch (e) {
+    console.error('Error submitting guest:', e);
+    return { success: false, error: e };
   }
 };
 
-// Retrieve guest submissions
-export const getGuestSubmissions = async (formId: string, userEmail?: string) => {
+// Fetch guests for an attendee
+export const getGuestsForAttendee = async (attendee_id: string) => {
   try {
     if (!supabase) {
-      console.warn('Cannot get guest submissions: Supabase client not available');
-      return { 
-        success: false, 
-        error: 'Supabase configuration missing. Please check environment variables.',
-        mock: true,
-        data: [] 
-      };
+      return { success: false, error: 'Supabase unavailable', data: [] };
     }
-    
-    let query = supabase
-      .from('guest_info')
+    const { data, error } = await supabase
+      .from('guests')
       .select('*')
-      .eq('form id', formId); // Use "form id" for Supabase
-    
-    // Filter by user email if provided
-    if (userEmail) {
-      query = query.eq('user_email', userEmail);
-    }
-    
-    const { data, error } = await query.order('created_at', { ascending: false });
+      .eq('attendee_id', attendee_id);
 
     if (error) throw error;
     return { success: true, data };
-  } catch (error) {
-    console.error('Error retrieving guest submissions:', error);
-    return { success: false, error, data: [] };
+  } catch (e) {
+    return { success: false, error: e, data: [] };
   }
 };

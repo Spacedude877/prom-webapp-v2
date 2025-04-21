@@ -146,6 +146,62 @@ export type Database = {
           },
         ]
       }
+      guests: {
+        Row: {
+          attendance_status: string | null
+          attendee_id: string | null
+          first_name: string
+          grade_level: string | null
+          guest_email: string | null
+          id: string
+          payment_status: string | null
+          qr_code: string | null
+          scan_count: number | null
+          submission_data: Json | null
+          submitted_at: string | null
+          surname: string
+          ticket_type: string | null
+        }
+        Insert: {
+          attendance_status?: string | null
+          attendee_id?: string | null
+          first_name: string
+          grade_level?: string | null
+          guest_email?: string | null
+          id?: string
+          payment_status?: string | null
+          qr_code?: string | null
+          scan_count?: number | null
+          submission_data?: Json | null
+          submitted_at?: string | null
+          surname: string
+          ticket_type?: string | null
+        }
+        Update: {
+          attendance_status?: string | null
+          attendee_id?: string | null
+          first_name?: string
+          grade_level?: string | null
+          guest_email?: string | null
+          id?: string
+          payment_status?: string | null
+          qr_code?: string | null
+          scan_count?: number | null
+          submission_data?: Json | null
+          submitted_at?: string | null
+          surname?: string
+          ticket_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guests_attendee_id_fkey"
+            columns: ["attendee_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_form"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -222,6 +278,89 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seating_requests: {
+        Row: {
+          attendee_id: string | null
+          id: string
+          request_details: Json | null
+          request_type: string
+          submitted_at: string | null
+        }
+        Insert: {
+          attendee_id?: string | null
+          id?: string
+          request_details?: Json | null
+          request_type: string
+          submitted_at?: string | null
+        }
+        Update: {
+          attendee_id?: string | null
+          id?: string
+          request_details?: Json | null
+          request_type?: string
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seating_requests_attendee_id_fkey"
+            columns: ["attendee_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_form"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_form: {
+        Row: {
+          attendance_status: string | null
+          first_name: string
+          grade_level: string | null
+          has_guest: boolean | null
+          id: string
+          payment_status: string | null
+          qr_code: string | null
+          scan_count: number | null
+          student_email: string
+          submission_data: Json | null
+          submitted_at: string | null
+          surname: string
+          ticket_type: string | null
+          user_email: string | null
+        }
+        Insert: {
+          attendance_status?: string | null
+          first_name: string
+          grade_level?: string | null
+          has_guest?: boolean | null
+          id?: string
+          payment_status?: string | null
+          qr_code?: string | null
+          scan_count?: number | null
+          student_email: string
+          submission_data?: Json | null
+          submitted_at?: string | null
+          surname: string
+          ticket_type?: string | null
+          user_email?: string | null
+        }
+        Update: {
+          attendance_status?: string | null
+          first_name?: string
+          grade_level?: string | null
+          has_guest?: boolean | null
+          id?: string
+          payment_status?: string | null
+          qr_code?: string | null
+          scan_count?: number | null
+          student_email?: string
+          submission_data?: Json | null
+          submitted_at?: string | null
+          surname?: string
+          ticket_type?: string | null
+          user_email?: string | null
+        }
+        Relationships: []
       }
       tickets: {
         Row: {
