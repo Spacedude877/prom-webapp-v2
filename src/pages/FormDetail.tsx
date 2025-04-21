@@ -90,190 +90,60 @@ const formTemplates: Record<string, FormData> = {
       { 
         id: "guest-1-name", 
         type: "text", 
-        label: "Guest 1 - Please add your guest's full name (as known at school)", 
+        label: "Guest - Please add your guest's full name (as known at school)", 
         required: true,
-        dependsOn: { field: "table-configuration", value: ["Free Seating (Single)", "Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+        dependsOn: { field: "table-configuration", value: [
+          "Free Seating (Single)",
+          "Free Seating (Couple)",
+          "Half Table (5 People)",
+          "Half Table (6 People)",
+          "Full Table (10 People)",
+          "Full Table (12 People)"
+        ] }
       },
       {
         id: "guest-1-grade-level",
         type: "select",
-        label: "Guest 1 - Grade Level",
+        label: "Guest - Grade Level",
         required: true,
         options: ["Junior Grade 11", "Senior Grade 12"],
-        dependsOn: { field: "table-configuration", value: ["Free Seating (Single)", "Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+        dependsOn: { field: "table-configuration", value: [
+          "Free Seating (Single)",
+          "Free Seating (Couple)",
+          "Half Table (5 People)",
+          "Half Table (6 People)",
+          "Full Table (10 People)",
+          "Full Table (12 People)"
+        ] }
       },
       { 
         id: "guest-1-school-email", 
         type: "email", 
-        label: "Guest 1 - School Email Address", 
+        label: "Guest - School Email Address", 
         required: true,
         placeholder: "guest@email.com",
-        dependsOn: { field: "table-configuration", value: ["Free Seating (Single)", "Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+        dependsOn: { field: "table-configuration", value: [
+          "Free Seating (Single)",
+          "Free Seating (Couple)",
+          "Half Table (5 People)",
+          "Half Table (6 People)",
+          "Full Table (10 People)",
+          "Full Table (12 People)"
+        ] }
       },
-      { 
-        id: "guest-2-name", 
-        type: "text", 
-        label: "Guest 2 - Please add your guest's full name (as they are known by at school)", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-2-student-number", 
-        type: "text", 
-        label: "Guest 2 - Student Number", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-3-name", 
-        type: "text", 
-        label: "Guest 3 - Please add your guest's full name (as they are known by at school)", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-3-student-number", 
-        type: "text", 
-        label: "Guest 3 - Student Number", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-4-name", 
-        type: "text", 
-        label: "Guest 4 - Please add your guest's full name (as they are known by at school)", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-4-student-number", 
-        type: "text", 
-        label: "Guest 4 - Student Number", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-5-name", 
-        type: "text", 
-        label: "Guest 5 - Please add your guest's full name (as they are known by at school)", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-5-student-number", 
-        type: "text", 
-        label: "Guest 5 - Student Number", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      
-      { 
-        id: "guest-6-name", 
-        type: "text", 
-        label: "Guest 6 - Please add your guest's full name (as they are known by at school)", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-6-student-number", 
-        type: "text", 
-        label: "Guest 6 - Student Number", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      
-      { 
-        id: "guest-7-name", 
-        type: "text", 
-        label: "Guest 7 - Please add your guest's full name (as they are known by at school)", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-7-student-number", 
-        type: "text", 
-        label: "Guest 7 - Student Number", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-8-name", 
-        type: "text", 
-        label: "Guest 8 - Please add your guest's full name (as they are known by at school)", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-8-student-number", 
-        type: "text", 
-        label: "Guest 8 - Student Number", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-9-name", 
-        type: "text", 
-        label: "Guest 9 - Please add your guest's full name (as they are known by at school)", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-9-student-number", 
-        type: "text", 
-        label: "Guest 9 - Student Number", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-10-name", 
-        type: "text", 
-        label: "Guest 10 - Please add your guest's full name (as they are known by at school)", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-10-student-number", 
-        type: "text", 
-        label: "Guest 10 - Student Number", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
-      },
-      
-      { 
-        id: "guest-11-name", 
-        type: "text", 
-        label: "Guest 11 - Please add your guest's full name (as they are known by at school)", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-11-student-number", 
-        type: "text", 
-        label: "Guest 11 - Student Number", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-12-name", 
-        type: "text", 
-        label: "Guest 12 - Please add your guest's full name (as they are known by at school)", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Full Table (12 People)"] }
-      },
-      { 
-        id: "guest-12-student-number", 
-        type: "text", 
-        label: "Guest 12 - Student Number", 
-        required: true,
-        dependsOn: { field: "table-configuration", value: ["Full Table (12 People)"] }
-      },
-      
       { 
         id: "additional-notes", 
         type: "textarea", 
         label: "Additional Notes or Requests", 
         required: false,
-        dependsOn: { field: "table-configuration", value: ["Free Seating (Single)", "Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+        dependsOn: { field: "table-configuration", value: [
+          "Free Seating (Single)",
+          "Free Seating (Couple)",
+          "Half Table (5 People)",
+          "Half Table (6 People)",
+          "Full Table (10 People)",
+          "Full Table (12 People)"
+        ] }
       },
     ],
     steps: [
@@ -284,22 +154,11 @@ const formTemplates: Record<string, FormData> = {
       },
       {
         title: "Guest Information",
-        description: "Provide details for all guests",
+        description: "Provide details for your guest",
         questions: [
           "guest-1-name",
           "guest-1-grade-level",
           "guest-1-school-email",
-          "guest-2-name", "guest-2-student-number",
-          "guest-3-name", "guest-3-student-number",
-          "guest-4-name", "guest-4-student-number",
-          "guest-5-name", "guest-5-student-number",
-          "guest-6-name", "guest-6-student-number",
-          "guest-7-name", "guest-7-student-number",
-          "guest-8-name", "guest-8-student-number",
-          "guest-9-name", "guest-9-student-number",
-          "guest-10-name", "guest-10-student-number",
-          "guest-11-name", "guest-11-student-number",
-          "guest-12-name", "guest-12-student-number",
           "additional-notes"
         ]
       }
