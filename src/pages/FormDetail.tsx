@@ -90,18 +90,26 @@ const formTemplates: Record<string, FormData> = {
       { 
         id: "guest-1-name", 
         type: "text", 
-        label: "Guest 1 - Please add your full name (as you are known by at school)", 
+        label: "Guest 1 - Please add your guest's full name (as known at school)", 
         required: true,
+        dependsOn: { field: "table-configuration", value: ["Free Seating (Single)", "Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      {
+        id: "guest-1-grade-level",
+        type: "select",
+        label: "Guest 1 - Grade Level",
+        required: true,
+        options: ["Junior Grade 11", "Senior Grade 12"],
         dependsOn: { field: "table-configuration", value: ["Free Seating (Single)", "Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
       },
       { 
-        id: "guest-1-student-number", 
-        type: "text", 
-        label: "Guest 1 - Student Number", 
+        id: "guest-1-school-email", 
+        type: "email", 
+        label: "Guest 1 - School Email Address", 
         required: true,
+        placeholder: "guest@email.com",
         dependsOn: { field: "table-configuration", value: ["Free Seating (Single)", "Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
       },
-      
       { 
         id: "guest-2-name", 
         type: "text", 
@@ -116,7 +124,6 @@ const formTemplates: Record<string, FormData> = {
         required: true,
         dependsOn: { field: "table-configuration", value: ["Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
       },
-      
       { 
         id: "guest-3-name", 
         type: "text", 
@@ -279,7 +286,9 @@ const formTemplates: Record<string, FormData> = {
         title: "Guest Information",
         description: "Provide details for all guests",
         questions: [
-          "guest-1-name", "guest-1-student-number",
+          "guest-1-name",
+          "guest-1-grade-level",
+          "guest-1-school-email",
           "guest-2-name", "guest-2-student-number",
           "guest-3-name", "guest-3-student-number",
           "guest-4-name", "guest-4-student-number",
