@@ -2,7 +2,7 @@
 import { supabase } from './baseService';
 import { TicketForm } from '@/types/supabase';
 
-// Submit main ticket form
+// Updated to embed guest_info directly on form
 export const submitTicketForm = async (form: {
   first_name: string;
   surname: string;
@@ -12,6 +12,7 @@ export const submitTicketForm = async (form: {
   user_email?: string;
   submission_data?: Record<string, any>;
   has_guest?: boolean;
+  guest_info?: Record<string, any>;
 }) => {
   try {
     if (!supabase) {
@@ -42,10 +43,11 @@ export const getTicketFormByUserEmail = async (user_email: string) => {
       .from('ticket_form')
       .select('*')
       .eq('user_email', user_email)
-      .single();
+      .maybeSingle(); // Change to maybeSingle for robustness
     if (error) throw error;
     return { success: true, data };
   } catch (e) {
     return { success: false, error: e, data: null };
   }
 };
+
