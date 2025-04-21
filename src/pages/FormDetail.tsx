@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import Container from '@/components/ui/Container'; // Fixed capitalization
+import Container from '@/components/ui/container';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
 import FormRenderer from '@/components/forms/FormRenderer';
@@ -92,7 +92,7 @@ const FormDetail = () => {
         <p className="text-gray-600 text-center mb-8">{form.description}</p>
 
         <div className="max-w-3xl mx-auto">
-          <FormRenderer formId={formId} formConfig={form as any} />
+          <FormRenderer formId={formId} formConfig={form} />
           
           {isAuthenticated && formId && (
             <FormSubmissions formId={formId} />

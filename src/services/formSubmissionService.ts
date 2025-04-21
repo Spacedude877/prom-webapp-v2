@@ -1,7 +1,6 @@
 
 import { supabase } from './baseService';
 import { FormSubmission } from '@/types/supabase';
-import { Form } from '@/types/forms';
 
 // Submit form data for a specific form
 export const submitFormData = async (formId: string, formData: Record<string, any>, userEmail?: string) => {
@@ -102,40 +101,5 @@ export const hasUserSubmittedForm = async (formId: string, userEmail: string) =>
   } catch (error) {
     console.error('Error checking user form submission:', error);
     return { success: false, error, data: false };
-  }
-};
-
-export const getFormById = async (formId: string): Promise<Form | null> => {
-  try {
-    // In a real implementation, this would fetch data from Supabase
-    // For now, return an enhanced mock Form that includes required fields
-    const mockForm: Form = {
-      id: formId,
-      name: `Form ${formId}`,
-      description: `This is a detailed description for form ${formId}. Please fill out all required fields.`,
-      type: 'active',
-      completed: false,
-      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
-      questions: [
-        {
-          id: 'question-1',
-          type: 'text',
-          label: 'Full Name',
-          placeholder: 'Enter your full name',
-          required: true
-        },
-        {
-          id: 'question-2',
-          type: 'email',
-          label: 'Email Address',
-          placeholder: 'your.email@example.com',
-          required: true
-        }
-      ]
-    };
-    return mockForm;
-  } catch (error) {
-    console.error('Error fetching form:', error);
-    return null;
   }
 };
