@@ -23,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Navigation from "@/components/layout/Navigation";
 import { ChevronLeft, Table2 } from "lucide-react";
 import { FormData, FormValues, TableConfiguration } from "@/types/forms";
-import { submitFormData } from "@/services/supabaseService";
+import { submitFormData } from "@/services/formSubmissionService";
 import FormSubmissions from "@/components/forms/FormSubmissions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -39,14 +39,18 @@ const formTemplates: Record<string, FormData> = {
     questions: [
       { id: "firstname", type: "text", label: "First Name", required: true },
       { id: "surname", type: "text", label: "Surname", required: true },
-      { id: "student-number", type: "text", label: "Student Number", required: true },
-      { id: "student-email", type: "email", label: "Student Email Address", required: true },
+      { id: "student-email", type: "email", label: "Student School Email Address", required: true, placeholder: "your@email.com" },
       { 
         id: "grade-level", 
         type: "select", 
         label: "Grade Level", 
         required: true, 
-        options: ["Junior Grade 11", "Senior Grade 12"]
+        options: [
+          "Freshman (Grade 9)",
+          "Sophomore (Grade 10)",
+          "Junior (Grade 11)",
+          "Senior (Grade 12)"
+        ]
       },
       { 
         id: "ticket-type", 
@@ -88,77 +92,63 @@ const formTemplates: Record<string, FormData> = {
         required: true 
       },
       { 
-        id: "guest-1-name", 
+        id: "paying-for-guest", 
+        type: "radio", 
+        label: "Are you paying for a guest?", 
+        options: ["Yes", "No"], 
+        required: true 
+      },
+      { 
+        id: "guest-name", 
         type: "text", 
-        label: "Guest - Please add your guest's full name (as known at school)", 
+        label: "Guest - Full Name (as known at school)", 
         required: true,
-        dependsOn: { field: "table-configuration", value: [
-          "Free Seating (Single)",
-          "Free Seating (Couple)",
-          "Half Table (5 People)",
-          "Half Table (6 People)",
-          "Full Table (10 People)",
-          "Full Table (12 People)"
-        ] }
+        dependsOn: { field: "paying-for-guest", value: "Yes" }
       },
       {
-        id: "guest-1-grade-level",
+        id: "guest-grade-level",
         type: "select",
         label: "Guest - Grade Level",
         required: true,
-        options: ["Junior Grade 11", "Senior Grade 12"],
-        dependsOn: { field: "table-configuration", value: [
-          "Free Seating (Single)",
-          "Free Seating (Couple)",
-          "Half Table (5 People)",
-          "Half Table (6 People)",
-          "Full Table (10 People)",
-          "Full Table (12 People)"
-        ] }
+        options: [
+          "Freshman (Grade 9)",
+          "Sophomore (Grade 10)",
+          "Junior (Grade 11)",
+          "Senior (Grade 12)"
+        ],
+        dependsOn: { field: "paying-for-guest", value: "Yes" }
       },
       { 
-        id: "guest-1-school-email", 
+        id: "guest-school-email", 
         type: "email", 
         label: "Guest - School Email Address", 
         required: true,
         placeholder: "guest@email.com",
-        dependsOn: { field: "table-configuration", value: [
-          "Free Seating (Single)",
-          "Free Seating (Couple)",
-          "Half Table (5 People)",
-          "Half Table (6 People)",
-          "Full Table (10 People)",
-          "Full Table (12 People)"
-        ] }
+        dependsOn: { field: "paying-for-guest", value: "Yes" }
       },
       { 
         id: "additional-notes", 
         type: "textarea", 
         label: "Additional Notes or Requests", 
-        required: false,
-        dependsOn: { field: "table-configuration", value: [
-          "Free Seating (Single)",
-          "Free Seating (Couple)",
-          "Half Table (5 People)",
-          "Half Table (6 People)",
-          "Full Table (10 People)",
-          "Full Table (12 People)"
-        ] }
+        required: false
       },
     ],
     steps: [
       {
         title: "Table Configuration",
-        description: "Select your table seating option",
-        questions: ["table-configuration"]
+        description: "Select your table seating option and whether you are bringing a guest.",
+        questions: [
+          "table-configuration",
+          "paying-for-guest"
+        ]
       },
       {
         title: "Guest Information",
-        description: "Provide details for your guest",
+        description: "Provide details for your guest (only one guest allowed).",
         questions: [
-          "guest-1-name",
-          "guest-1-grade-level",
-          "guest-1-school-email",
+          "guest-name",
+          "guest-grade-level",
+          "guest-school-email",
           "additional-notes"
         ]
       }
@@ -373,9 +363,9 @@ function FormDetail() {
             "form id": formId,
             submission_data: values,
             submitted_at: new Date().toISOString(),
-            first_name: values.firstname || values["guest-1-name"] || '',
+            first_name: values.firstname || values["guest-name"] || '',
             surname: values.surname || '',
-            student_number: values['student-number'] || values["guest-1-student-number"] || '',
+            student_number: values['student-number'] || values["guest-student-number"] || '',
             email: values['student-email'] || '',
             grade_level: values['grade-level'] || '',
             ticket_type: values['ticket-type'] || '',
@@ -505,7 +495,7 @@ function FormDetail() {
   };
 
   const currentStepQuestions = formData.isMultiStep && formData.steps 
-    ? getFilteredQuestionsForStep(currentStep) 
+    ? getFilteredQuestionsForStep(currentStep)
     : formData.questions;
 
   return (
