@@ -144,7 +144,7 @@ const formTemplates: Record<string, FormData> = {
       },
       {
         title: "Guest Information",
-        description: "Provide details for your guest (only one guest allowed).",
+        description: "Provide details for your guest (if applicable).",
         questions: [
           "guest-name",
           "guest-grade-level",
@@ -345,10 +345,39 @@ function FormDetail() {
     }
   };
 
+  const getFilteredQuestionsForStep = (stepIndex: number) => {
+    if (!formData.steps || !formData.steps[stepIndex]) return [];
+    
+    return formData.questions.filter(q => {
+      if (formData.steps && formData.steps[stepIndex].questions.includes(q.id)) {
+        if (q.dependsOn) {
+          const dependencyValue = form.watch(q.dependsOn.field);
+          if (Array.isArray(q.dependsOn.value)) {
+            return q.dependsOn.value.includes(dependencyValue);
+          }
+          return dependencyValue === q.dependsOn.value;
+        }
+        return true;
+      }
+      return false;
+    });
+  };
+
+  const shouldMoveToSummary = () => {
+    const payingForGuest = form.watch("paying-for-guest");
+    return formData?.isMultiStep && currentStep === 0 && payingForGuest === "No";
+  };
+
   const onSubmit = async (values: FormValues) => {
-    if (formData?.isMultiStep && currentStep < (formData.steps?.length || 1) - 1) {
-      setCurrentStep(currentStep + 1);
-      return;
+    if (formData?.isMultiStep) {
+      if (currentStep < (formData.steps?.length || 1) - 1) {
+        if (shouldMoveToSummary()) {
+          setCurrentStep((formData.steps?.length || 1) - 1);
+        } else {
+          setCurrentStep(currentStep + 1);
+        }
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -365,7 +394,7 @@ function FormDetail() {
             submitted_at: new Date().toISOString(),
             first_name: values.firstname || values["guest-name"] || '',
             surname: values.surname || '',
-            student_number: values['student-number'] || values["guest-student-number"] || '',
+            student_number: '',
             email: values['student-email'] || '',
             grade_level: values['grade-level'] || '',
             ticket_type: values['ticket-type'] || '',
@@ -476,24 +505,6 @@ function FormDetail() {
     ? "bg-amber-100 text-amber-800"
     : "bg-red-100 text-red-800";
 
-  const getFilteredQuestionsForStep = (stepIndex: number) => {
-    if (!formData.steps || !formData.steps[stepIndex]) return [];
-    
-    return formData.questions.filter(q => {
-      if (formData.steps && formData.steps[stepIndex].questions.includes(q.id)) {
-        if (q.dependsOn) {
-          const dependencyValue = form.watch(q.dependsOn.field);
-          if (Array.isArray(q.dependsOn.value)) {
-            return q.dependsOn.value.includes(dependencyValue);
-          }
-          return dependencyValue === q.dependsOn.value;
-        }
-        return true;
-      }
-      return false;
-    });
-  };
-
   const currentStepQuestions = formData.isMultiStep && formData.steps 
     ? getFilteredQuestionsForStep(currentStep)
     : formData.questions;
@@ -548,39 +559,50 @@ function FormDetail() {
           {formData.isMultiStep && (
             <div className="mb-4 flex items-center justify-between">
               <div className="flex space-x-2">
-                {formData.steps?.map((step, index) => (
-                  <div
-                    key={index}
-                    className={cn(
-                      "flex items-center",
-                      index !== 0 && "ml-2"
-                    )}
-                  >
+                {formData.steps?.map((step, index) => {
+                  const payingForGuest = form.watch("paying-for-guest");
+                  if (index === 1 && payingForGuest === "No") {
+                    return null;
+                  }
+                  
+                  return (
                     <div
+                      key={index}
                       className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
-                        currentStep >= index
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
+                        "flex items-center",
+                        index !== 0 && "ml-2"
                       )}
                     >
-                      {index + 1}
-                    </div>
-                    {index < (formData.steps?.length || 0) - 1 && (
                       <div
                         className={cn(
-                          "h-1 w-12",
-                          currentStep > index
-                            ? "bg-primary"
-                            : "bg-muted"
+                          "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
+                          currentStep >= index
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
                         )}
-                      />
-                    )}
-                  </div>
-                ))}
+                      >
+                        {index + 1}
+                      </div>
+                      {index < (formData.steps?.length || 0) - 1 && (
+                        <div
+                          className={cn(
+                            "h-1 w-12",
+                            currentStep > index
+                              ? "bg-primary"
+                              : "bg-muted"
+                          )}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
               <div className="text-sm font-medium">
-                Step {currentStep + 1} of {formData.steps?.length}
+                {formData?.isMultiStep && (
+                  <>
+                    Step {currentStep + 1} of {form.watch("paying-for-guest") === "No" ? 1 : formData.steps?.length}
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -588,11 +610,11 @@ function FormDetail() {
           <Card className="mb-8 animate-fade-in shadow-sm">
             <CardHeader>
               <CardTitle>
-                {formData.isMultiStep && formData.steps 
+                {formData?.isMultiStep && formData.steps 
                   ? formData.steps[currentStep].title 
                   : "Form Details"}
               </CardTitle>
-              {formData.isMultiStep && formData.steps && formData.steps[currentStep].description && (
+              {formData?.isMultiStep && formData.steps && formData.steps[currentStep].description && (
                 <p className="text-sm text-muted-foreground">
                   {formData.steps[currentStep].description}
                 </p>
@@ -603,13 +625,9 @@ function FormDetail() {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   {currentStepQuestions.map((question) => {
                     if (
-                      currentStep === 1 && 
-                      question.dependsOn?.field === "table-configuration" && 
-                      question.dependsOn.value &&
-                      watchTableConfiguration &&
-                      (Array.isArray(question.dependsOn.value) 
-                        ? !question.dependsOn.value.includes(watchTableConfiguration)
-                        : question.dependsOn.value !== watchTableConfiguration)
+                      question.dependsOn?.field === "paying-for-guest" && 
+                      question.dependsOn.value === "Yes" && 
+                      form.watch("paying-for-guest") !== "Yes"
                     ) {
                       return null;
                     }
@@ -714,7 +732,7 @@ function FormDetail() {
                   })}
                   
                   <div className="flex justify-between mt-8">
-                    {formData.isMultiStep && currentStep > 0 ? (
+                    {formData?.isMultiStep && currentStep > 0 ? (
                       <Button 
                         type="button" 
                         variant="outline" 
@@ -746,7 +764,7 @@ function FormDetail() {
                       >
                         {isSubmitting 
                           ? "Submitting..." 
-                          : formData.isMultiStep && currentStep < (formData.steps?.length || 1) - 1
+                          : formData?.isMultiStep && currentStep < (formData.steps?.length || 1) - 1
                           ? "Next"
                           : "Submit"}
                       </Button>
