@@ -43,7 +43,7 @@ export const getTicketFormByUserEmail = async (user_email: string) => {
       .from('ticket_form')
       .select('*')
       .eq('user_email', user_email)
-      .maybeSingle(); // Change to maybeSingle for robustness
+      .maybeSingle(); // Using maybeSingle for robustness
     if (error) throw error;
     return { success: true, data };
   } catch (e) {

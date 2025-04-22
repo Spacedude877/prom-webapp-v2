@@ -346,7 +346,7 @@ function FormDetail() {
   };
 
   const getFilteredQuestionsForStep = (stepIndex: number) => {
-    if (!formData.steps || !formData.steps[stepIndex]) return [];
+    if (!formData?.steps || !formData.steps[stepIndex]) return [];
     
     return formData.questions.filter(q => {
       if (formData.steps && formData.steps[stepIndex].questions.includes(q.id)) {
@@ -365,17 +365,18 @@ function FormDetail() {
 
   const shouldMoveToSummary = () => {
     const payingForGuest = form.watch("paying-for-guest");
-    return formData?.isMultiStep && currentStep === 0 && payingForGuest === "No";
+    return payingForGuest === "No";
   };
 
   const onSubmit = async (values: FormValues) => {
     if (formData?.isMultiStep) {
       if (currentStep < (formData.steps?.length || 1) - 1) {
-        if (shouldMoveToSummary()) {
+        if (currentStep === 0 && shouldMoveToSummary()) {
           setCurrentStep((formData.steps?.length || 1) - 1);
-        } else {
-          setCurrentStep(currentStep + 1);
+          return;
         }
+        
+        setCurrentStep(currentStep + 1);
         return;
       }
     }
@@ -505,9 +506,12 @@ function FormDetail() {
     ? "bg-amber-100 text-amber-800"
     : "bg-red-100 text-red-800";
 
-  const currentStepQuestions = formData.isMultiStep && formData.steps 
+  const payingForGuest = form.watch("paying-for-guest");
+  const shouldShowGuestStep = payingForGuest === "Yes";
+
+  const currentStepQuestions = formData?.isMultiStep && formData.steps 
     ? getFilteredQuestionsForStep(currentStep)
-    : formData.questions;
+    : formData?.questions || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -556,12 +560,11 @@ function FormDetail() {
             </div>
           )}
 
-          {formData.isMultiStep && (
+          {formData?.isMultiStep && (
             <div className="mb-4 flex items-center justify-between">
               <div className="flex space-x-2">
                 {formData.steps?.map((step, index) => {
-                  const payingForGuest = form.watch("paying-for-guest");
-                  if (index === 1 && payingForGuest === "No") {
+                  if (index === 1 && !shouldShowGuestStep) {
                     return null;
                   }
                   
@@ -600,7 +603,7 @@ function FormDetail() {
               <div className="text-sm font-medium">
                 {formData?.isMultiStep && (
                   <>
-                    Step {currentStep + 1} of {form.watch("paying-for-guest") === "No" ? 1 : formData.steps?.length}
+                    Step {currentStep + 1} of {shouldShowGuestStep ? formData.steps?.length : 1}
                   </>
                 )}
               </div>
@@ -627,7 +630,7 @@ function FormDetail() {
                     if (
                       question.dependsOn?.field === "paying-for-guest" && 
                       question.dependsOn.value === "Yes" && 
-                      form.watch("paying-for-guest") !== "Yes"
+                      payingForGuest !== "Yes"
                     ) {
                       return null;
                     }
@@ -764,7 +767,7 @@ function FormDetail() {
                       >
                         {isSubmitting 
                           ? "Submitting..." 
-                          : formData?.isMultiStep && currentStep < (formData.steps?.length || 1) - 1
+                          : formData?.isMultiStep && currentStep < (formData.steps?.length || 1) - 1 && shouldShowGuestStep
                           ? "Next"
                           : "Submit"}
                       </Button>
