@@ -53,9 +53,9 @@ export const getFormSubmissions = async (formId: string, userEmail?: string) => 
     }
     
     let query = supabase
-      .from('form_submissions')
+      .from('ticket_form') // Use ticket_form instead of form_submissions
       .select('*')
-      .eq('form id', formId); // Use "form id" for Supabase
+      .eq('form_id', formId);  // We use form_id field here
     
     // Filter by user email if provided
     if (userEmail) {
@@ -90,9 +90,9 @@ export const hasUserSubmittedForm = async (formId: string, userEmail: string) =>
     }
     
     const { data, error } = await supabase
-      .from('form_submissions')
+      .from('ticket_form')  // Use ticket_form instead of form_submissions
       .select('id')
-      .eq('form id', formId)
+      .eq('form_id', formId)  // Use form_id field here
       .eq('user_email', userEmail)
       .limit(1);
 

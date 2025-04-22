@@ -27,6 +27,7 @@ import { submitFormData } from "@/services/formSubmissionService";
 import FormSubmissions from "@/components/forms/FormSubmissions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { submitTicketForm } from "@/services/ticketFormService";
 
 const formTemplates: Record<string, FormData> = {
   "form-1": {
@@ -39,7 +40,13 @@ const formTemplates: Record<string, FormData> = {
     questions: [
       { id: "firstname", type: "text", label: "First Name", required: true },
       { id: "surname", type: "text", label: "Surname", required: true },
-      { id: "student-email", type: "email", label: "Student School Email Address", required: true, placeholder: "your@email.com" },
+      { 
+        id: "student-email", 
+        type: "email", 
+        label: "Student School Email Address", 
+        required: true, 
+        placeholder: "your@email.com"
+      },
       { 
         id: "grade-level", 
         type: "select", 
@@ -369,36 +376,32 @@ function FormDetail() {
 
   const onSubmit = async (values: FormValues) => {
     if (formData?.isMultiStep) {
-      // If we're on first step and user selected "No" for guest, skip directly to submit
       if (currentStep === 0 && shouldSkipToFinalStep()) {
-        // Skip directly to form submission instead of showing another step
         setIsSubmitting(true);
 
         try {
           if (formId) {
-            console.log("Submitting form data to Supabase:", values);
+            console.log("Submitting form data using ticketFormService:", values);
             
-            const { error } = await supabase
-              .from('form_submissions')
-              .insert({
-                "form id": formId,
-                submission_data: values,
-                submitted_at: new Date().toISOString(),
-                first_name: values.firstname || values["guest-name"] || '',
-                surname: values.surname || '',
-                student_number: '',
-                email: values['student-email'] || '',
-                grade_level: values['grade-level'] || '',
-                ticket_type: values['ticket-type'] || '',
-                has_guest: values['paying-for-guest'] === 'Yes',
-                user_email: user?.email || null
-              });
+            const formSubmissionData = {
+              first_name: values.firstname || '',
+              surname: values.surname || '',
+              student_email: values['student-email'] || '',
+              grade_level: values['grade-level'] || '',
+              ticket_type: values['ticket-type'] || '',
+              user_email: user?.email || null,
+              submission_data: values,
+              has_guest: values['paying-for-guest'] === 'Yes',
+              guest_info: null
+            };
 
-            if (error) {
-              console.error("Supabase submission error:", error);
-              toast.error(`Error submitting form: ${error.message}`);
+            const response = await submitTicketForm(formSubmissionData);
+
+            if (!response.success) {
+              console.error("Ticket form submission error:", response.error);
+              toast.error(`Error submitting form: ${response.error}`);
               setSubmissionStatus('error');
-              setSupabaseError(error.message);
+              setSupabaseError(String(response.error));
             } else {
               console.log("Form submission successful");
               toast.success("Form submitted successfully!");
@@ -437,29 +440,36 @@ function FormDetail() {
 
     try {
       if (formId) {
-        console.log("Submitting form data to Supabase:", values);
+        console.log("Submitting form data using ticketFormService:", values);
         
-        const { error } = await supabase
-          .from('form_submissions')
-          .insert({
-            "form id": formId,
-            submission_data: values,
-            submitted_at: new Date().toISOString(),
-            first_name: values.firstname || values["guest-name"] || '',
-            surname: values.surname || '',
-            student_number: '',
-            email: values['student-email'] || '',
-            grade_level: values['grade-level'] || '',
-            ticket_type: values['ticket-type'] || '',
-            has_guest: values['paying-for-guest'] === 'Yes',
-            user_email: user?.email || null
-          });
+        const formSubmissionData = {
+          first_name: values.firstname || '',
+          surname: values.surname || '',
+          student_email: values['student-email'] || '',
+          grade_level: values['grade-level'] || '',
+          ticket_type: values['ticket-type'] || '',
+          user_email: user?.email || null,
+          submission_data: values,
+          has_guest: values['paying-for-guest'] === 'Yes',
+        };
 
-        if (error) {
-          console.error("Supabase submission error:", error);
-          toast.error(`Error submitting form: ${error.message}`);
+        if (values['paying-for-guest'] === 'Yes' && values['guest-name']) {
+          formSubmissionData.guest_info = {
+            first_name: values['guest-name'] || '',
+            surname: '',
+            email: values['guest-school-email'] || '',
+            grade_level: values['guest-grade-level'] || '',
+            ticket_type: values['ticket-type'] || '',
+          };
+        }
+
+        const response = await submitTicketForm(formSubmissionData);
+
+        if (!response.success) {
+          console.error("Ticket form submission error:", response.error);
+          toast.error(`Error submitting form: ${response.error}`);
           setSubmissionStatus('error');
-          setSupabaseError(error.message);
+          setSupabaseError(String(response.error));
         } else {
           console.log("Form submission successful");
           toast.success("Form submitted successfully!");
@@ -561,10 +571,9 @@ function FormDetail() {
   const payingForGuest = form.watch("paying-for-guest");
   const shouldShowGuestStep = payingForGuest === "Yes";
 
-  // Only show guest-related steps if user selected "Yes" for paying for guest
   const visibleSteps = formData?.steps?.filter((step, index) => {
-    if (index === 0) return true; // Always show first step
-    return shouldShowGuestStep; // Only show other steps if paying for guest
+    if (index === 0) return true;
+    return shouldShowGuestStep;
   });
 
   const currentStepQuestions = formData?.isMultiStep && formData.steps 
@@ -576,7 +585,6 @@ function FormDetail() {
       <Navigation />
       <div className="container mx-auto px-6 pt-24 pb-16">
         <div className="max-w-3xl mx-auto">
-          {/* Form header with back button and status */}
           <div className="flex items-center mb-6 animate-fade-in">
             <Button 
               onClick={handleGoBack} 
@@ -605,7 +613,6 @@ function FormDetail() {
             </div>
           </div>
           
-          {/* Supabase error message */}
           {supabaseError && (
             <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
               <p className="text-yellow-800">
@@ -617,7 +624,6 @@ function FormDetail() {
             </div>
           )}
 
-          {/* Multi-step form progress */}
           {formData?.isMultiStep && (
             <div className="mb-4 flex items-center justify-between">
               <div className="flex space-x-2">
@@ -662,7 +668,6 @@ function FormDetail() {
             </div>
           )}
           
-          {/* Form card */}
           <Card className="mb-8 animate-fade-in shadow-sm">
             <CardHeader>
               <CardTitle>
@@ -679,9 +684,7 @@ function FormDetail() {
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  {/* Form fields */}
                   {currentStepQuestions.map((question) => {
-                    // Skip guest-related questions if not paying for guest
                     if (
                       question.dependsOn?.field === "paying-for-guest" && 
                       question.dependsOn.value === "Yes" && 
@@ -789,7 +792,6 @@ function FormDetail() {
                     );
                   })}
                   
-                  {/* Form buttons */}
                   <div className="flex justify-between mt-8">
                     {formData?.isMultiStep && currentStep > 0 ? (
                       <Button 
@@ -836,7 +838,6 @@ function FormDetail() {
             </CardContent>
           </Card>
           
-          {/* Form submissions section */}
           {formId && isAuthenticated && user && (
             <FormSubmissions formId={formId} />
           )}
