@@ -27,7 +27,8 @@ import { submitFormData } from "@/services/formSubmissionService";
 import FormSubmissions from "@/components/forms/FormSubmissions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { submitTicketForm, submitSeatingRequest } from "@/services/ticketFormService";
+import { submitTicketForm } from "@/services/ticketFormService";
+import { submitSeatingRequest } from "@/services/seatingRequestService";
 
 const formTemplates: Record<string, FormData> = {
   "form-1": {
@@ -385,7 +386,7 @@ function FormDetail() {
             
             if (formId === "form-2" && values["table-configuration"]) {
               const seatingRequestData = {
-                attendee_id: user?.id || 'anonymous',
+                attendee_id: user?.email || 'anonymous',
                 request_type: values["table-configuration"] as string,
                 request_details: values
               };
@@ -479,7 +480,7 @@ function FormDetail() {
           console.log("Submitting seating request:", values);
           
           const seatingRequestData = {
-            attendee_id: user?.id || 'anonymous',
+            attendee_id: user?.email || 'anonymous',
             request_type: values["table-configuration"] as string,
             request_details: values
           };

@@ -1,6 +1,8 @@
 
 import { supabase } from './baseService';
 import { FormSubmission } from '@/types/supabase';
+import { submitTicketForm } from './ticketFormService';
+import { submitSeatingRequest } from './seatingRequestService';
 
 // Submit form data for a specific form
 export const submitFormData = async (formId: string, formData: Record<string, any>, userEmail?: string) => {
@@ -17,37 +19,29 @@ export const submitFormData = async (formId: string, formData: Record<string, an
     // Determine which table to submit to based on the form ID
     if (formId === "form-2") {
       // For the table booking form, submit to seating_requests
-      const seatingRequest = await supabase
-        .from('seating_requests')
-        .insert({
-          attendee_id: userEmail || null, // Using user email as attendee ID for now
-          request_type: formData['table-configuration'] || 'unknown',
-          request_details: formData,
-          submitted_at: new Date().toISOString()
-        });
+      const seatingRequest = await submitSeatingRequest({
+        attendee_id: userEmail || 'anonymous',
+        request_type: formData['table-configuration'] || 'unknown',
+        request_details: formData
+      });
         
-      if (seatingRequest.error) throw seatingRequest.error;
-      return { success: true, data: seatingRequest.data };
+      return seatingRequest;
       
     } else {
       // For other forms, submit to ticket_form
-      const formSubmission = await supabase
-        .from('ticket_form')
-        .insert({
-          first_name: formData.firstname || '',
-          surname: formData.surname || '',
-          student_email: formData['student-email'] || '',
-          grade_level: formData['grade-level'] || '',
-          ticket_type: formData['ticket-type'] || '',
-          user_email: userEmail || null,
-          submission_data: formData,
-          has_guest: formData['paying-for-guest'] === 'Yes',
-          form_id: formId, // Store which form was used
-          submitted_at: new Date().toISOString(),
-        });
+      const ticketSubmission = await submitTicketForm({
+        first_name: formData.firstname || '',
+        surname: formData.surname || '',
+        student_email: formData['student-email'] || '',
+        grade_level: formData['grade-level'] || '',
+        ticket_type: formData['ticket-type'] || '',
+        user_email: userEmail || null,
+        submission_data: formData,
+        has_guest: formData['paying-for-guest'] === 'Yes',
+        form_id: formId // Store which form was used
+      });
 
-      if (formSubmission.error) throw formSubmission.error;
-      return { success: true, data: formSubmission.data };
+      return ticketSubmission;
     }
   } catch (error) {
     console.error('Error submitting form:', error);
