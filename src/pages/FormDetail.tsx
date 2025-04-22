@@ -27,7 +27,7 @@ import { submitFormData } from "@/services/formSubmissionService";
 import FormSubmissions from "@/components/forms/FormSubmissions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { submitTicketForm } from "@/services/ticketFormService";
+import { submitTicketForm, submitSeatingRequest } from "@/services/ticketFormService";
 
 const formTemplates: Record<string, FormData> = {
   "form-1": {
@@ -383,6 +383,41 @@ function FormDetail() {
           if (formId) {
             console.log("Submitting form data using ticketFormService:", values);
             
+            if (formId === "form-2" && values["table-configuration"]) {
+              const seatingRequestData = {
+                attendee_id: user?.id || 'anonymous',
+                request_type: values["table-configuration"] as string,
+                request_details: values
+              };
+              
+              const response = await submitSeatingRequest(seatingRequestData);
+              
+              if (!response.success) {
+                console.error("Seating request submission error:", response.error);
+                toast.error(`Error submitting form: ${response.error}`);
+                setSubmissionStatus('error');
+                setSupabaseError(String(response.error));
+              } else {
+                console.log("Seating request submission successful");
+                toast.success("Table booking submitted successfully!");
+                setIsCompleted(true);
+                setIsEditing(false);
+                setSubmissionStatus('success');
+                
+                if (formData) {
+                  const updatedTemplates = { ...formTemplates };
+                  if (formId in updatedTemplates) {
+                    updatedTemplates[formId] = {
+                      ...formData,
+                      completed: true,
+                    };
+                  }
+                }
+              }
+              setIsSubmitting(false);
+              return;
+            }
+            
             const formSubmissionData = {
               first_name: values.firstname || '',
               surname: values.surname || '',
@@ -440,50 +475,85 @@ function FormDetail() {
 
     try {
       if (formId) {
-        console.log("Submitting form data using ticketFormService:", values);
-        
-        const formSubmissionData = {
-          first_name: values.firstname || '',
-          surname: values.surname || '',
-          student_email: values['student-email'] || '',
-          grade_level: values['grade-level'] || '',
-          ticket_type: values['ticket-type'] || '',
-          user_email: user?.email || null,
-          submission_data: values,
-          has_guest: values['paying-for-guest'] === 'Yes',
-        };
-
-        if (values['paying-for-guest'] === 'Yes' && values['guest-name']) {
-          formSubmissionData.guest_info = {
-            first_name: values['guest-name'] || '',
-            surname: '',
-            email: values['guest-school-email'] || '',
-            grade_level: values['guest-grade-level'] || '',
-            ticket_type: values['ticket-type'] || '',
-          };
-        }
-
-        const response = await submitTicketForm(formSubmissionData);
-
-        if (!response.success) {
-          console.error("Ticket form submission error:", response.error);
-          toast.error(`Error submitting form: ${response.error}`);
-          setSubmissionStatus('error');
-          setSupabaseError(String(response.error));
-        } else {
-          console.log("Form submission successful");
-          toast.success("Form submitted successfully!");
-          setIsCompleted(true);
-          setIsEditing(false);
-          setSubmissionStatus('success');
+        if (formId === "form-2" && values["table-configuration"]) {
+          console.log("Submitting seating request:", values);
           
-          if (formData) {
-            const updatedTemplates = { ...formTemplates };
-            if (formId in updatedTemplates) {
-              updatedTemplates[formId] = {
-                ...formData,
-                completed: true,
-              };
+          const seatingRequestData = {
+            attendee_id: user?.id || 'anonymous',
+            request_type: values["table-configuration"] as string,
+            request_details: values
+          };
+          
+          const response = await submitSeatingRequest(seatingRequestData);
+          
+          if (!response.success) {
+            console.error("Seating request submission error:", response.error);
+            toast.error(`Error submitting form: ${response.error}`);
+            setSubmissionStatus('error');
+            setSupabaseError(String(response.error));
+          } else {
+            console.log("Seating request submission successful");
+            toast.success("Table booking submitted successfully!");
+            setIsCompleted(true);
+            setIsEditing(false);
+            setSubmissionStatus('success');
+            
+            if (formData) {
+              const updatedTemplates = { ...formTemplates };
+              if (formId in updatedTemplates) {
+                updatedTemplates[formId] = {
+                  ...formData,
+                  completed: true,
+                };
+              }
+            }
+          }
+        } else {
+          console.log("Submitting form data using ticketFormService:", values);
+          
+          const formSubmissionData: any = {
+            first_name: values.firstname || '',
+            surname: values.surname || '',
+            student_email: values['student-email'] || '',
+            grade_level: values['grade-level'] || '',
+            ticket_type: values['ticket-type'] || '',
+            user_email: user?.email || null,
+            submission_data: values,
+            has_guest: values['paying-for-guest'] === 'Yes',
+          };
+
+          if (values['paying-for-guest'] === 'Yes' && values['guest-name']) {
+            formSubmissionData.guest_info = {
+              first_name: values['guest-name'] || '',
+              surname: '',
+              email: values['guest-school-email'] || '',
+              grade_level: values['guest-grade-level'] || '',
+              ticket_type: values['ticket-type'] || '',
+            };
+          }
+
+          const response = await submitTicketForm(formSubmissionData);
+
+          if (!response.success) {
+            console.error("Ticket form submission error:", response.error);
+            toast.error(`Error submitting form: ${response.error}`);
+            setSubmissionStatus('error');
+            setSupabaseError(String(response.error));
+          } else {
+            console.log("Form submission successful");
+            toast.success("Form submitted successfully!");
+            setIsCompleted(true);
+            setIsEditing(false);
+            setSubmissionStatus('success');
+            
+            if (formData) {
+              const updatedTemplates = { ...formTemplates };
+              if (formId in updatedTemplates) {
+                updatedTemplates[formId] = {
+                  ...formData,
+                  completed: true,
+                };
+              }
             }
           }
         }

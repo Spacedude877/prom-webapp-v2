@@ -38,6 +38,7 @@ export const submitTicketForm = async (form: {
     if (error) throw error;
     return { success: true, data: data?.[0] };
   } catch (e) {
+    console.error('Error submitting ticket form:', e);
     return { success: false, error: e };
   }
 };
@@ -45,14 +46,20 @@ export const submitTicketForm = async (form: {
 // Fetch ticket form by user email
 export const getTicketFormByUserEmail = async (user_email: string) => {
   try {
+    if (!supabase) {
+      return { success: false, error: 'Supabase unavailable', data: null };
+    }
+    
     const { data, error } = await supabase
       .from('ticket_form')
       .select('*')
       .eq('user_email', user_email)
       .maybeSingle(); // Using maybeSingle for robustness
+      
     if (error) throw error;
     return { success: true, data };
   } catch (e) {
+    console.error('Error fetching ticket form:', e);
     return { success: false, error: e, data: null };
   }
 };
