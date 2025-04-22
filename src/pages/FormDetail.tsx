@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -363,19 +364,71 @@ function FormDetail() {
     });
   };
 
-  const shouldMoveToSummary = () => {
-    const payingForGuest = form.watch("paying-for-guest");
-    return payingForGuest === "No";
+  const shouldSkipToFinalStep = () => {
+    return form.watch("paying-for-guest") === "No";
   };
 
   const onSubmit = async (values: FormValues) => {
     if (formData?.isMultiStep) {
-      if (currentStep < (formData.steps?.length || 1) - 1) {
-        if (currentStep === 0 && shouldMoveToSummary()) {
-          setCurrentStep((formData.steps?.length || 1) - 1);
-          return;
+      // If we're on first step and user selected "No" for guest, skip directly to submit
+      if (currentStep === 0 && shouldSkipToFinalStep()) {
+        // Skip directly to form submission instead of showing another step
+        setIsSubmitting(true);
+
+        try {
+          if (formId) {
+            console.log("Submitting form data to Supabase:", values);
+            
+            const { error } = await supabase
+              .from('form_submissions')
+              .insert({
+                "form id": formId,
+                submission_data: values,
+                submitted_at: new Date().toISOString(),
+                first_name: values.firstname || values["guest-name"] || '',
+                surname: values.surname || '',
+                student_number: '',
+                email: values['student-email'] || '',
+                grade_level: values['grade-level'] || '',
+                ticket_type: values['ticket-type'] || '',
+                has_guest: values['paying-for-guest'] === 'Yes',
+                user_email: user?.email || null
+              });
+
+            if (error) {
+              console.error("Supabase submission error:", error);
+              toast.error(`Error submitting form: ${error.message}`);
+              setSubmissionStatus('error');
+              setSupabaseError(error.message);
+            } else {
+              console.log("Form submission successful");
+              toast.success("Form submitted successfully!");
+              setIsCompleted(true);
+              setIsEditing(false);
+              setSubmissionStatus('success');
+              
+              if (formData) {
+                const updatedTemplates = { ...formTemplates };
+                if (formId in updatedTemplates) {
+                  updatedTemplates[formId] = {
+                    ...formData,
+                    completed: true,
+                  };
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Form submission error:", error);
+          toast.error("An error occurred while submitting the form");
+          setSubmissionStatus('error');
+        } finally {
+          setIsSubmitting(false);
         }
-        
+        return;
+      }
+      
+      if (currentStep < (formData.steps?.length || 1) - 1) {
         setCurrentStep(currentStep + 1);
         return;
       }
@@ -509,6 +562,12 @@ function FormDetail() {
   const payingForGuest = form.watch("paying-for-guest");
   const shouldShowGuestStep = payingForGuest === "Yes";
 
+  // Only show guest-related steps if user selected "Yes" for paying for guest
+  const visibleSteps = formData?.steps?.filter((_, index) => {
+    if (index === 0) return true; // Always show first step
+    return shouldShowGuestStep; // Only show other steps if paying for guest
+  });
+
   const currentStepQuestions = formData?.isMultiStep && formData.steps 
     ? getFilteredQuestionsForStep(currentStep)
     : formData?.questions || [];
@@ -518,6 +577,7 @@ function FormDetail() {
       <Navigation />
       <div className="container mx-auto px-6 pt-24 pb-16">
         <div className="max-w-3xl mx-auto">
+          {/* Form header with back button and status */}
           <div className="flex items-center mb-6 animate-fade-in">
             <Button 
               onClick={handleGoBack} 
@@ -546,74 +606,61 @@ function FormDetail() {
             </div>
           </div>
           
+          {/* Supabase error message */}
           {supabaseError && (
-            <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-md">
-              <h3 className="font-medium text-amber-800">Configuration Note</h3>
-              <p className="text-sm text-amber-700">{supabaseError}</p>
-              <p className="text-sm text-amber-700 mt-2">
-                To enable database functionality, please set the Supabase environment variables:
-                <code className="block mt-1 p-2 bg-amber-100 rounded">
-                  VITE_SUPABASE_URL<br />
-                  VITE_SUPABASE_ANON_KEY
-                </code>
-              </p>
-            </div>
+            /* ... keep existing code (error message display) */
           )}
 
+          {/* Multi-step form progress */}
           {formData?.isMultiStep && (
             <div className="mb-4 flex items-center justify-between">
               <div className="flex space-x-2">
-                {formData.steps?.map((step, index) => {
-                  if (index === 1 && !shouldShowGuestStep) {
-                    return null;
-                  }
-                  
-                  return (
+                {visibleSteps?.map((step, index) => (
+                  <div
+                    key={index}
+                    className={cn(
+                      "flex items-center",
+                      index !== 0 && "ml-2"
+                    )}
+                  >
                     <div
-                      key={index}
                       className={cn(
-                        "flex items-center",
-                        index !== 0 && "ml-2"
+                        "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
+                        currentStep >= index
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
                       )}
                     >
+                      {index + 1}
+                    </div>
+                    {index < (visibleSteps?.length || 0) - 1 && (
                       <div
                         className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
-                          currentStep >= index
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground"
+                          "h-1 w-12",
+                          currentStep > index
+                            ? "bg-primary"
+                            : "bg-muted"
                         )}
-                      >
-                        {index + 1}
-                      </div>
-                      {index < (formData.steps?.length || 0) - 1 && (
-                        <div
-                          className={cn(
-                            "h-1 w-12",
-                            currentStep > index
-                              ? "bg-primary"
-                              : "bg-muted"
-                          )}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
+                      />
+                    )}
+                  </div>
+                ))}
               </div>
               <div className="text-sm font-medium">
                 {formData?.isMultiStep && (
                   <>
-                    Step {currentStep + 1} of {shouldShowGuestStep ? formData.steps?.length : 1}
+                    Step {currentStep + 1} of {visibleSteps?.length || 1}
                   </>
                 )}
               </div>
             </div>
           )}
           
+          {/* Form card */}
           <Card className="mb-8 animate-fade-in shadow-sm">
             <CardHeader>
               <CardTitle>
-                {formData?.isMultiStep && formData.steps 
+                {formData?.isMultiStep && formData.steps && visibleSteps?.[currentStep]
                   ? formData.steps[currentStep].title 
                   : "Form Details"}
               </CardTitle>
@@ -626,7 +673,9 @@ function FormDetail() {
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Form fields */}
                   {currentStepQuestions.map((question) => {
+                    // Skip guest-related questions if not paying for guest
                     if (
                       question.dependsOn?.field === "paying-for-guest" && 
                       question.dependsOn.value === "Yes" && 
@@ -734,6 +783,7 @@ function FormDetail() {
                     );
                   })}
                   
+                  {/* Form buttons */}
                   <div className="flex justify-between mt-8">
                     {formData?.isMultiStep && currentStep > 0 ? (
                       <Button 
@@ -767,7 +817,9 @@ function FormDetail() {
                       >
                         {isSubmitting 
                           ? "Submitting..." 
-                          : formData?.isMultiStep && currentStep < (formData.steps?.length || 1) - 1 && shouldShowGuestStep
+                          : currentStep === 0 && !shouldShowGuestStep
+                          ? "Submit"
+                          : currentStep < (visibleSteps?.length || 1) - 1
                           ? "Next"
                           : "Submit"}
                       </Button>
@@ -778,6 +830,7 @@ function FormDetail() {
             </CardContent>
           </Card>
           
+          {/* Form submissions section */}
           {formId && isAuthenticated && user && (
             <FormSubmissions formId={formId} />
           )}
