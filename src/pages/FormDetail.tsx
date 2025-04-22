@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -563,7 +562,7 @@ function FormDetail() {
   const shouldShowGuestStep = payingForGuest === "Yes";
 
   // Only show guest-related steps if user selected "Yes" for paying for guest
-  const visibleSteps = formData?.steps?.filter((_, index) => {
+  const visibleSteps = formData?.steps?.filter((step, index) => {
     if (index === 0) return true; // Always show first step
     return shouldShowGuestStep; // Only show other steps if paying for guest
   });
@@ -608,7 +607,14 @@ function FormDetail() {
           
           {/* Supabase error message */}
           {supabaseError && (
-            /* ... keep existing code (error message display) */
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+              <p className="text-yellow-800">
+                <strong>Note:</strong> {supabaseError}
+              </p>
+              <p className="text-sm text-yellow-700 mt-1">
+                This is a demo application. In a production environment, you would be connected to a live database.
+              </p>
+            </div>
           )}
 
           {/* Multi-step form progress */}
@@ -664,7 +670,7 @@ function FormDetail() {
                   ? formData.steps[currentStep].title 
                   : "Form Details"}
               </CardTitle>
-              {formData?.isMultiStep && formData.steps && formData.steps[currentStep].description && (
+              {formData?.isMultiStep && formData.steps && visibleSteps?.[currentStep]?.description && (
                 <p className="text-sm text-muted-foreground">
                   {formData.steps[currentStep].description}
                 </p>
@@ -817,7 +823,7 @@ function FormDetail() {
                       >
                         {isSubmitting 
                           ? "Submitting..." 
-                          : currentStep === 0 && !shouldShowGuestStep
+                          : currentStep === 0 && shouldSkipToFinalStep()
                           ? "Submit"
                           : currentStep < (visibleSteps?.length || 1) - 1
                           ? "Next"
