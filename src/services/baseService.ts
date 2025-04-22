@@ -15,13 +15,38 @@ if (!supabaseUrl || !supabaseKey) {
 // This will not throw errors but will log operations and return empty results
 const createMockClient = () => {
   const mockMethods = {
-    from: () => ({
-      insert: () => Promise.resolve({ data: null, error: new Error('Mock Supabase client - No credentials provided') }),
-      select: () => ({
-        eq: () => ({
-          order: () => Promise.resolve({ data: [], error: null }),
-          limit: () => Promise.resolve({ data: [], error: null })
-        })
+    from: (table: string) => ({
+      insert: (data: any) => {
+        console.log(`Mock insert to ${table}:`, data);
+        return {
+          select: undefined, // This is intentionally undefined to indicate it's a mock
+          data: null,
+          error: new Error('Mock Supabase client - No credentials provided')
+        };
+      },
+      select: (columns: string = '*') => ({
+        eq: (column: string, value: any) => ({
+          order: (column: string, { ascending }: { ascending: boolean }) => {
+            console.log(`Mock select from ${table} where ${column}=${value} order by ${column} ${ascending ? 'asc' : 'desc'}`);
+            return Promise.resolve({ data: [], error: null });
+          },
+          limit: (limit: number) => {
+            console.log(`Mock select from ${table} where ${column}=${value} limit ${limit}`);
+            return Promise.resolve({ data: [], error: null });
+          },
+          maybeSingle: () => {
+            console.log(`Mock select from ${table} where ${column}=${value} maybeSingle`);
+            return Promise.resolve({ data: null, error: null });
+          }
+        }),
+        limit: (limit: number) => {
+          console.log(`Mock select from ${table} limit ${limit}`);
+          return Promise.resolve({ data: [], error: null });
+        },
+        order: (column: string, { ascending }: { ascending: boolean }) => {
+          console.log(`Mock select from ${table} order by ${column} ${ascending ? 'asc' : 'desc'}`);
+          return Promise.resolve({ data: [], error: null });
+        }
       })
     })
   };

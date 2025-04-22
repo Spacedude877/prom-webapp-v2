@@ -13,6 +13,22 @@ export const submitSeatingRequest = async (request: {
       return { success: false, error: 'Supabase unavailable' };
     }
     
+    // Check if we're using the mock client
+    const isMockClient = typeof supabase.from('seating_requests').insert({}).select !== 'function';
+    
+    if (isMockClient) {
+      console.log('Using mock client for seating request submission');
+      return { 
+        success: true, 
+        data: {
+          ...request,
+          id: 'mock-id',
+          submitted_at: new Date().toISOString()
+        },
+        mock: true 
+      };
+    }
+    
     const { data, error } = await supabase
       .from('seating_requests')
       .insert({

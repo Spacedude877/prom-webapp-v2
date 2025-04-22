@@ -23,6 +23,26 @@ export const submitTicketForm = async (form: {
     // Extract form_id from submission_data if not provided directly
     const formId = form.form_id || (form.submission_data && form.submission_data["form id"]);
     
+    // Check if we're using the mock client
+    const isMockClient = typeof supabase.from('ticket_form').insert({}).select !== 'function';
+    
+    if (isMockClient) {
+      console.log('Using mock client for ticket form submission');
+      return { 
+        success: true, 
+        data: {
+          ...form,
+          id: 'mock-id',
+          form_id: formId,
+          payment_status: 'pending',
+          attendance_status: 'not checked in',
+          scan_count: 0,
+          submitted_at: new Date().toISOString(),
+        },
+        mock: true 
+      };
+    }
+    
     const { data, error } = await supabase
       .from('ticket_form')
       .insert({
