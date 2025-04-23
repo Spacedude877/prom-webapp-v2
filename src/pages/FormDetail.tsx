@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -23,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Navigation from "@/components/layout/Navigation";
 import { ChevronLeft, Table2 } from "lucide-react";
 import { FormData, FormValues, TableConfiguration } from "@/types/forms";
-import { submitFormData } from "@/services/supabaseService";
+import { submitFormData } from "@/services/formSubmissionService";
 import FormSubmissions from "@/components/forms/FormSubmissions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
