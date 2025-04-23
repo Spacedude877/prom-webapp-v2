@@ -32,8 +32,7 @@ export const submitTicketForm = async (form: {
         attendance_status: 'not checked in',
         scan_count: 0,
         submitted_at: new Date().toISOString(),
-      })
-      .select();
+      }, { returning: "representation" });
 
     if (error) throw error;
     return { success: true, data: data?.[0] };

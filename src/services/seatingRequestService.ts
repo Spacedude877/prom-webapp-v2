@@ -18,8 +18,7 @@ export const submitSeatingRequest = async (request: {
       .insert({
         ...request,
         submitted_at: new Date().toISOString(),
-      })
-      .select();
+      }, { returning: "representation" });
 
     if (error) throw error;
     return { success: true, data: data?.[0] };
