@@ -9,62 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      attendees: {
-        Row: {
-          checked_in: boolean | null
-          created_at: string | null
-          id: number
-          purchase_id: number | null
-        }
-        Insert: {
-          checked_in?: boolean | null
-          created_at?: string | null
-          id?: never
-          purchase_id?: number | null
-        }
-        Update: {
-          checked_in?: boolean | null
-          created_at?: string | null
-          id?: never
-          purchase_id?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "attendees_purchase_id_fkey"
-            columns: ["purchase_id"]
-            isOneToOne: false
-            referencedRelation: "purchases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      events: {
-        Row: {
-          created_at: string | null
-          date: string | null
-          description: string | null
-          id: number
-          location: string | null
-          name: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          date?: string | null
-          description?: string | null
-          id?: never
-          location?: string | null
-          name?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          date?: string | null
-          description?: string | null
-          id?: never
-          location?: string | null
-          name?: string | null
-        }
-        Relationships: []
-      }
       form_submissions: {
         Row: {
           additional_info: Json | null
@@ -129,22 +73,7 @@ export type Database = {
           user_email?: string | null
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "form_submissions_ticket_id_fkey"
-            columns: ["ticket_id"]
-            isOneToOne: false
-            referencedRelation: "tickets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "form_submissions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       guests: {
         Row: {
@@ -198,83 +127,6 @@ export type Database = {
             columns: ["attendee_id"]
             isOneToOne: false
             referencedRelation: "ticket_form"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          created_at: string | null
-          first_name: string | null
-          id: number
-          meal_choice: string | null
-          surname: string | null
-          table_seating: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          first_name?: string | null
-          id?: never
-          meal_choice?: string | null
-          surname?: string | null
-          table_seating?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          first_name?: string | null
-          id?: never
-          meal_choice?: string | null
-          surname?: string | null
-          table_seating?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      purchases: {
-        Row: {
-          created_at: string | null
-          id: number
-          payment_status: string | null
-          ticket_id: number | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: never
-          payment_status?: string | null
-          ticket_id?: number | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: never
-          payment_status?: string | null
-          ticket_id?: number | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "purchases_ticket_id_fkey"
-            columns: ["ticket_id"]
-            isOneToOne: false
-            referencedRelation: "tickets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "purchases_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -359,65 +211,6 @@ export type Database = {
           surname?: string
           ticket_type?: string | null
           user_email?: string | null
-        }
-        Relationships: []
-      }
-      tickets: {
-        Row: {
-          created_at: string | null
-          event_id: number | null
-          id: number
-          price: number | null
-          qr_code: string | null
-          ticket_type: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          event_id?: number | null
-          id?: never
-          price?: number | null
-          qr_code?: string | null
-          ticket_type?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          event_id?: number | null
-          id?: never
-          price?: number | null
-          qr_code?: string | null
-          ticket_type?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tickets_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      users: {
-        Row: {
-          created_at: string | null
-          email: string | null
-          id: string
-          is_admin: boolean
-          password_hash: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email?: string | null
-          id?: string
-          is_admin?: boolean
-          password_hash?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email?: string | null
-          id?: string
-          is_admin?: boolean
-          password_hash?: string | null
         }
         Relationships: []
       }

@@ -16,9 +16,6 @@ const QrCodeDisplay: React.FC<QrCodeDisplayProps> = ({ formId, submissionId }) =
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Base URL for the verification page (include current domain)
-  const baseVerificationUrl = `${window.location.origin}/verify`;
-  
   useEffect(() => {
     const fetchQrCode = async () => {
       if (!formId || !submissionId) {
@@ -30,13 +27,12 @@ const QrCodeDisplay: React.FC<QrCodeDisplayProps> = ({ formId, submissionId }) =
       try {
         console.log(`Fetching QR code for submission ID: ${submissionId}`);
         
-        // Query Supabase directly using the client
         const { data, error: fetchError } = await supabase
           .from('form_submissions')
           .select('qr_code, payment_status')
           .eq('id', submissionId)
           .eq('form id', formId)
-          .single();
+          .maybeSingle();
         
         if (fetchError || !data) {
           console.error("Error fetching QR code:", fetchError);
@@ -46,7 +42,6 @@ const QrCodeDisplay: React.FC<QrCodeDisplayProps> = ({ formId, submissionId }) =
           console.log("QR code retrieved:", data.qr_code);
           setQrCode(data.qr_code);
           
-          // Show payment status notification if available
           if (data.payment_status === 'pending') {
             toast.warning("Payment is pending. Ticket will not be valid until payment is completed.");
           } else if (data.payment_status === 'completed') {
@@ -64,25 +59,12 @@ const QrCodeDisplay: React.FC<QrCodeDisplayProps> = ({ formId, submissionId }) =
     fetchQrCode();
   }, [formId, submissionId]);
   
-  const getQrImageUrl = () => {
-    if (!qrCode) return null;
-    
-    // Create the verification URL with the QR code
-    const verificationUrl = `${baseVerificationUrl}?code=${encodeURIComponent(qrCode)}`;
-    
-    // Generate QR code image URL using the Google Charts API
-    const qrImageUrl = `https://chart.googleapis.com/chart?cht=qr&chl=${encodeURIComponent(verificationUrl)}&chs=250x250&chld=L|1`;
-    return qrImageUrl;
-  };
-  
-  const qrImageUrl = getQrImageUrl();
-  
   const downloadQrCode = () => {
-    if (!qrImageUrl) return;
+    if (!qrCode) return;
     
     // Create a temporary link element
     const a = document.createElement('a');
-    a.href = qrImageUrl;
+    a.href = qrCode;
     a.download = `ticket-qr-code.png`;
     document.body.appendChild(a);
     a.click();
@@ -107,7 +89,7 @@ const QrCodeDisplay: React.FC<QrCodeDisplayProps> = ({ formId, submissionId }) =
     );
   }
   
-  if (error || !qrImageUrl) {
+  if (error || !qrCode) {
     return (
       <Card className="mt-6">
         <CardHeader>
@@ -137,7 +119,7 @@ const QrCodeDisplay: React.FC<QrCodeDisplayProps> = ({ formId, submissionId }) =
       <CardContent className="flex flex-col items-center">
         <div className="border p-4 rounded-md bg-white mb-4">
           <img 
-            src={qrImageUrl} 
+            src={qrCode} 
             alt="Ticket QR Code" 
             className="mx-auto"
             width={250}
