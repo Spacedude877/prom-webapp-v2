@@ -23,12 +23,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Navigation from "@/components/layout/Navigation";
 import { ChevronLeft, Table2 } from "lucide-react";
 import { FormData, FormValues, TableConfiguration } from "@/types/forms";
-import { submitFormData } from "@/services/formSubmissionService";
+import { submitFormData } from "@/services/supabaseService";
 import FormSubmissions from "@/components/forms/FormSubmissions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { submitTicketForm } from "@/services/ticketFormService";
-import { submitSeatingRequest } from "@/services/seatingRequestService";
 
 const formTemplates: Record<string, FormData> = {
   "form-1": {
@@ -41,24 +39,14 @@ const formTemplates: Record<string, FormData> = {
     questions: [
       { id: "firstname", type: "text", label: "First Name", required: true },
       { id: "surname", type: "text", label: "Surname", required: true },
-      { 
-        id: "student-email", 
-        type: "email", 
-        label: "Student School Email Address", 
-        required: true, 
-        placeholder: "your@email.com"
-      },
+      { id: "student-number", type: "text", label: "Student Number", required: true },
+      { id: "student-email", type: "email", label: "Student Email Address", required: true },
       { 
         id: "grade-level", 
         type: "select", 
         label: "Grade Level", 
         required: true, 
-        options: [
-          "Freshman (Grade 9)",
-          "Sophomore (Grade 10)",
-          "Junior (Grade 11)",
-          "Senior (Grade 12)"
-        ]
+        options: ["Junior Grade 11", "Senior Grade 12"]
       },
       { 
         id: "ticket-type", 
@@ -100,63 +88,209 @@ const formTemplates: Record<string, FormData> = {
         required: true 
       },
       { 
-        id: "paying-for-guest", 
-        type: "radio", 
-        label: "Are you paying for a guest?", 
-        options: ["Yes", "No"], 
-        required: true 
-      },
-      { 
-        id: "guest-name", 
+        id: "guest-1-name", 
         type: "text", 
-        label: "Guest - Full Name (as known at school)", 
+        label: "Guest 1 - Please add your full name (as you are known by at school)", 
         required: true,
-        dependsOn: { field: "paying-for-guest", value: "Yes" }
-      },
-      {
-        id: "guest-grade-level",
-        type: "select",
-        label: "Guest - Grade Level",
-        required: true,
-        options: [
-          "Freshman (Grade 9)",
-          "Sophomore (Grade 10)",
-          "Junior (Grade 11)",
-          "Senior (Grade 12)"
-        ],
-        dependsOn: { field: "paying-for-guest", value: "Yes" }
+        dependsOn: { field: "table-configuration", value: ["Free Seating (Single)", "Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
       },
       { 
-        id: "guest-school-email", 
-        type: "email", 
-        label: "Guest - School Email Address", 
+        id: "guest-1-student-number", 
+        type: "text", 
+        label: "Guest 1 - Student Number", 
         required: true,
-        placeholder: "guest@email.com",
-        dependsOn: { field: "paying-for-guest", value: "Yes" }
+        dependsOn: { field: "table-configuration", value: ["Free Seating (Single)", "Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
       },
+      
+      { 
+        id: "guest-2-name", 
+        type: "text", 
+        label: "Guest 2 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-2-student-number", 
+        type: "text", 
+        label: "Guest 2 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      
+      { 
+        id: "guest-3-name", 
+        type: "text", 
+        label: "Guest 3 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-3-student-number", 
+        type: "text", 
+        label: "Guest 3 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-4-name", 
+        type: "text", 
+        label: "Guest 4 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-4-student-number", 
+        type: "text", 
+        label: "Guest 4 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-5-name", 
+        type: "text", 
+        label: "Guest 5 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-5-student-number", 
+        type: "text", 
+        label: "Guest 5 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      
+      { 
+        id: "guest-6-name", 
+        type: "text", 
+        label: "Guest 6 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-6-student-number", 
+        type: "text", 
+        label: "Guest 6 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      
+      { 
+        id: "guest-7-name", 
+        type: "text", 
+        label: "Guest 7 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-7-student-number", 
+        type: "text", 
+        label: "Guest 7 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-8-name", 
+        type: "text", 
+        label: "Guest 8 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-8-student-number", 
+        type: "text", 
+        label: "Guest 8 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-9-name", 
+        type: "text", 
+        label: "Guest 9 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-9-student-number", 
+        type: "text", 
+        label: "Guest 9 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-10-name", 
+        type: "text", 
+        label: "Guest 10 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-10-student-number", 
+        type: "text", 
+        label: "Guest 10 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (10 People)", "Full Table (12 People)"] }
+      },
+      
+      { 
+        id: "guest-11-name", 
+        type: "text", 
+        label: "Guest 11 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-11-student-number", 
+        type: "text", 
+        label: "Guest 11 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-12-name", 
+        type: "text", 
+        label: "Guest 12 - Please add your guest's full name (as they are known by at school)", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (12 People)"] }
+      },
+      { 
+        id: "guest-12-student-number", 
+        type: "text", 
+        label: "Guest 12 - Student Number", 
+        required: true,
+        dependsOn: { field: "table-configuration", value: ["Full Table (12 People)"] }
+      },
+      
       { 
         id: "additional-notes", 
         type: "textarea", 
         label: "Additional Notes or Requests", 
-        required: false
+        required: false,
+        dependsOn: { field: "table-configuration", value: ["Free Seating (Single)", "Free Seating (Couple)", "Half Table (5 People)", "Half Table (6 People)", "Full Table (10 People)", "Full Table (12 People)"] }
       },
     ],
     steps: [
       {
         title: "Table Configuration",
-        description: "Select your table seating option and whether you are bringing a guest.",
-        questions: [
-          "table-configuration",
-          "paying-for-guest"
-        ]
+        description: "Select your table seating option",
+        questions: ["table-configuration"]
       },
       {
         title: "Guest Information",
-        description: "Provide details for your guest (if applicable).",
+        description: "Provide details for all guests",
         questions: [
-          "guest-name",
-          "guest-grade-level",
-          "guest-school-email",
+          "guest-1-name", "guest-1-student-number",
+          "guest-2-name", "guest-2-student-number",
+          "guest-3-name", "guest-3-student-number",
+          "guest-4-name", "guest-4-student-number",
+          "guest-5-name", "guest-5-student-number",
+          "guest-6-name", "guest-6-student-number",
+          "guest-7-name", "guest-7-student-number",
+          "guest-8-name", "guest-8-student-number",
+          "guest-9-name", "guest-9-student-number",
+          "guest-10-name", "guest-10-student-number",
+          "guest-11-name", "guest-11-student-number",
+          "guest-12-name", "guest-12-student-number",
           "additional-notes"
         ]
       }
@@ -353,208 +487,53 @@ function FormDetail() {
     }
   };
 
-  const getFilteredQuestionsForStep = (stepIndex: number) => {
-    if (!formData?.steps || !formData.steps[stepIndex]) return [];
-    
-    return formData.questions.filter(q => {
-      if (formData.steps && formData.steps[stepIndex].questions.includes(q.id)) {
-        if (q.dependsOn) {
-          const dependencyValue = form.watch(q.dependsOn.field);
-          if (Array.isArray(q.dependsOn.value)) {
-            return q.dependsOn.value.includes(dependencyValue);
-          }
-          return dependencyValue === q.dependsOn.value;
-        }
-        return true;
-      }
-      return false;
-    });
-  };
-
-  const shouldSkipToFinalStep = () => {
-    return form.watch("paying-for-guest") === "No";
-  };
-
   const onSubmit = async (values: FormValues) => {
-    if (formData?.isMultiStep) {
-      if (currentStep === 0 && shouldSkipToFinalStep()) {
-        setIsSubmitting(true);
-
-        try {
-          if (formId) {
-            console.log("Submitting form data using ticketFormService:", values);
-            
-            if (formId === "form-2" && values["table-configuration"]) {
-              const seatingRequestData = {
-                attendee_id: user?.email || 'anonymous',
-                request_type: values["table-configuration"] as string,
-                request_details: values
-              };
-              
-              const response = await submitSeatingRequest(seatingRequestData);
-              
-              if (!response.success) {
-                console.error("Seating request submission error:", response.error);
-                toast.error(`Error submitting form: ${response.error}`);
-                setSubmissionStatus('error');
-                setSupabaseError(String(response.error));
-              } else {
-                console.log("Seating request submission successful");
-                toast.success("Table booking submitted successfully!");
-                setIsCompleted(true);
-                setIsEditing(false);
-                setSubmissionStatus('success');
-                
-                if (formData) {
-                  const updatedTemplates = { ...formTemplates };
-                  if (formId in updatedTemplates) {
-                    updatedTemplates[formId] = {
-                      ...formData,
-                      completed: true,
-                    };
-                  }
-                }
-              }
-              setIsSubmitting(false);
-              return;
-            }
-            
-            const formSubmissionData = {
-              first_name: values.firstname || '',
-              surname: values.surname || '',
-              student_email: values['student-email'] || '',
-              grade_level: values['grade-level'] || '',
-              ticket_type: values['ticket-type'] || '',
-              user_email: user?.email || null,
-              submission_data: values,
-              has_guest: values['paying-for-guest'] === 'Yes',
-              guest_info: null
-            };
-
-            const response = await submitTicketForm(formSubmissionData);
-
-            if (!response.success) {
-              console.error("Ticket form submission error:", response.error);
-              toast.error(`Error submitting form: ${response.error}`);
-              setSubmissionStatus('error');
-              setSupabaseError(String(response.error));
-            } else {
-              console.log("Form submission successful");
-              toast.success("Form submitted successfully!");
-              setIsCompleted(true);
-              setIsEditing(false);
-              setSubmissionStatus('success');
-              
-              if (formData) {
-                const updatedTemplates = { ...formTemplates };
-                if (formId in updatedTemplates) {
-                  updatedTemplates[formId] = {
-                    ...formData,
-                    completed: true,
-                  };
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.error("Form submission error:", error);
-          toast.error("An error occurred while submitting the form");
-          setSubmissionStatus('error');
-        } finally {
-          setIsSubmitting(false);
-        }
-        return;
-      }
-      
-      if (currentStep < (formData.steps?.length || 1) - 1) {
-        setCurrentStep(currentStep + 1);
-        return;
-      }
+    if (formData?.isMultiStep && currentStep < (formData.steps?.length || 1) - 1) {
+      setCurrentStep(currentStep + 1);
+      return;
     }
 
     setIsSubmitting(true);
 
     try {
       if (formId) {
-        if (formId === "form-2" && values["table-configuration"]) {
-          console.log("Submitting seating request:", values);
-          
-          const seatingRequestData = {
-            attendee_id: user?.email || 'anonymous',
-            request_type: values["table-configuration"] as string,
-            request_details: values
-          };
-          
-          const response = await submitSeatingRequest(seatingRequestData);
-          
-          if (!response.success) {
-            console.error("Seating request submission error:", response.error);
-            toast.error(`Error submitting form: ${response.error}`);
-            setSubmissionStatus('error');
-            setSupabaseError(String(response.error));
-          } else {
-            console.log("Seating request submission successful");
-            toast.success("Table booking submitted successfully!");
-            setIsCompleted(true);
-            setIsEditing(false);
-            setSubmissionStatus('success');
-            
-            if (formData) {
-              const updatedTemplates = { ...formTemplates };
-              if (formId in updatedTemplates) {
-                updatedTemplates[formId] = {
-                  ...formData,
-                  completed: true,
-                };
-              }
-            }
-          }
-        } else {
-          console.log("Submitting form data using ticketFormService:", values);
-          
-          const formSubmissionData: any = {
-            first_name: values.firstname || '',
+        console.log("Submitting form data to Supabase:", values);
+        
+        const { error } = await supabase
+          .from('form_submissions')
+          .insert({
+            "form id": formId,
+            submission_data: values,
+            submitted_at: new Date().toISOString(),
+            first_name: values.firstname || values["guest-1-name"] || '',
             surname: values.surname || '',
-            student_email: values['student-email'] || '',
+            student_number: values['student-number'] || values["guest-1-student-number"] || '',
+            email: values['student-email'] || '',
             grade_level: values['grade-level'] || '',
             ticket_type: values['ticket-type'] || '',
-            user_email: user?.email || null,
-            submission_data: values,
             has_guest: values['paying-for-guest'] === 'Yes',
-          };
+            user_email: user?.email || null
+          });
 
-          if (values['paying-for-guest'] === 'Yes' && values['guest-name']) {
-            formSubmissionData.guest_info = {
-              first_name: values['guest-name'] || '',
-              surname: '',
-              email: values['guest-school-email'] || '',
-              grade_level: values['guest-grade-level'] || '',
-              ticket_type: values['ticket-type'] || '',
-            };
-          }
-
-          const response = await submitTicketForm(formSubmissionData);
-
-          if (!response.success) {
-            console.error("Ticket form submission error:", response.error);
-            toast.error(`Error submitting form: ${response.error}`);
-            setSubmissionStatus('error');
-            setSupabaseError(String(response.error));
-          } else {
-            console.log("Form submission successful");
-            toast.success("Form submitted successfully!");
-            setIsCompleted(true);
-            setIsEditing(false);
-            setSubmissionStatus('success');
-            
-            if (formData) {
-              const updatedTemplates = { ...formTemplates };
-              if (formId in updatedTemplates) {
-                updatedTemplates[formId] = {
-                  ...formData,
-                  completed: true,
-                };
-              }
+        if (error) {
+          console.error("Supabase submission error:", error);
+          toast.error(`Error submitting form: ${error.message}`);
+          setSubmissionStatus('error');
+          setSupabaseError(error.message);
+        } else {
+          console.log("Form submission successful");
+          toast.success("Form submitted successfully!");
+          setIsCompleted(true);
+          setIsEditing(false);
+          setSubmissionStatus('success');
+          
+          if (formData) {
+            const updatedTemplates = { ...formTemplates };
+            if (formId in updatedTemplates) {
+              updatedTemplates[formId] = {
+                ...formData,
+                completed: true,
+              };
             }
           }
         }
@@ -639,17 +618,27 @@ function FormDetail() {
     ? "bg-amber-100 text-amber-800"
     : "bg-red-100 text-red-800";
 
-  const payingForGuest = form.watch("paying-for-guest");
-  const shouldShowGuestStep = payingForGuest === "Yes";
+  const getFilteredQuestionsForStep = (stepIndex: number) => {
+    if (!formData.steps || !formData.steps[stepIndex]) return [];
+    
+    return formData.questions.filter(q => {
+      if (formData.steps && formData.steps[stepIndex].questions.includes(q.id)) {
+        if (q.dependsOn) {
+          const dependencyValue = form.watch(q.dependsOn.field);
+          if (Array.isArray(q.dependsOn.value)) {
+            return q.dependsOn.value.includes(dependencyValue);
+          }
+          return dependencyValue === q.dependsOn.value;
+        }
+        return true;
+      }
+      return false;
+    });
+  };
 
-  const visibleSteps = formData?.steps?.filter((step, index) => {
-    if (index === 0) return true;
-    return shouldShowGuestStep;
-  });
-
-  const currentStepQuestions = formData?.isMultiStep && formData.steps 
-    ? getFilteredQuestionsForStep(currentStep)
-    : formData?.questions || [];
+  const currentStepQuestions = formData.isMultiStep && formData.steps 
+    ? getFilteredQuestionsForStep(currentStep) 
+    : formData.questions;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -685,20 +674,23 @@ function FormDetail() {
           </div>
           
           {supabaseError && (
-            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-              <p className="text-yellow-800">
-                <strong>Note:</strong> {supabaseError}
-              </p>
-              <p className="text-sm text-yellow-700 mt-1">
-                This is a demo application. In a production environment, you would be connected to a live database.
+            <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-md">
+              <h3 className="font-medium text-amber-800">Configuration Note</h3>
+              <p className="text-sm text-amber-700">{supabaseError}</p>
+              <p className="text-sm text-amber-700 mt-2">
+                To enable database functionality, please set the Supabase environment variables:
+                <code className="block mt-1 p-2 bg-amber-100 rounded">
+                  VITE_SUPABASE_URL<br />
+                  VITE_SUPABASE_ANON_KEY
+                </code>
               </p>
             </div>
           )}
 
-          {formData?.isMultiStep && (
+          {formData.isMultiStep && (
             <div className="mb-4 flex items-center justify-between">
               <div className="flex space-x-2">
-                {visibleSteps?.map((step, index) => (
+                {formData.steps?.map((step, index) => (
                   <div
                     key={index}
                     className={cn(
@@ -716,7 +708,7 @@ function FormDetail() {
                     >
                       {index + 1}
                     </div>
-                    {index < (visibleSteps?.length || 0) - 1 && (
+                    {index < (formData.steps?.length || 0) - 1 && (
                       <div
                         className={cn(
                           "h-1 w-12",
@@ -730,11 +722,7 @@ function FormDetail() {
                 ))}
               </div>
               <div className="text-sm font-medium">
-                {formData?.isMultiStep && (
-                  <>
-                    Step {currentStep + 1} of {visibleSteps?.length || 1}
-                  </>
-                )}
+                Step {currentStep + 1} of {formData.steps?.length}
               </div>
             </div>
           )}
@@ -742,11 +730,11 @@ function FormDetail() {
           <Card className="mb-8 animate-fade-in shadow-sm">
             <CardHeader>
               <CardTitle>
-                {formData?.isMultiStep && formData.steps && visibleSteps?.[currentStep]
+                {formData.isMultiStep && formData.steps 
                   ? formData.steps[currentStep].title 
                   : "Form Details"}
               </CardTitle>
-              {formData?.isMultiStep && formData.steps && visibleSteps?.[currentStep]?.description && (
+              {formData.isMultiStep && formData.steps && formData.steps[currentStep].description && (
                 <p className="text-sm text-muted-foreground">
                   {formData.steps[currentStep].description}
                 </p>
@@ -757,9 +745,13 @@ function FormDetail() {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   {currentStepQuestions.map((question) => {
                     if (
-                      question.dependsOn?.field === "paying-for-guest" && 
-                      question.dependsOn.value === "Yes" && 
-                      payingForGuest !== "Yes"
+                      currentStep === 1 && 
+                      question.dependsOn?.field === "table-configuration" && 
+                      question.dependsOn.value &&
+                      watchTableConfiguration &&
+                      (Array.isArray(question.dependsOn.value) 
+                        ? !question.dependsOn.value.includes(watchTableConfiguration)
+                        : question.dependsOn.value !== watchTableConfiguration)
                     ) {
                       return null;
                     }
@@ -864,7 +856,7 @@ function FormDetail() {
                   })}
                   
                   <div className="flex justify-between mt-8">
-                    {formData?.isMultiStep && currentStep > 0 ? (
+                    {formData.isMultiStep && currentStep > 0 ? (
                       <Button 
                         type="button" 
                         variant="outline" 
@@ -896,9 +888,7 @@ function FormDetail() {
                       >
                         {isSubmitting 
                           ? "Submitting..." 
-                          : currentStep === 0 && shouldSkipToFinalStep()
-                          ? "Submit"
-                          : currentStep < (visibleSteps?.length || 1) - 1
+                          : formData.isMultiStep && currentStep < (formData.steps?.length || 1) - 1
                           ? "Next"
                           : "Submit"}
                       </Button>

@@ -9,21 +9,17 @@ export const submitSeatingRequest = async (request: {
   request_details?: Record<string, any>;
 }) => {
   try {
-    if (!supabase) {
-      return { success: false, error: 'Supabase unavailable' };
-    }
-    
     const { data, error } = await supabase
       .from('seating_requests')
       .insert({
         ...request,
         submitted_at: new Date().toISOString(),
-      }, { returning: "representation" });
+      })
+      .select();
 
     if (error) throw error;
     return { success: true, data: data?.[0] };
   } catch (e) {
-    console.error('Error submitting seating request:', e);
     return { success: false, error: e };
   }
 };
@@ -31,10 +27,6 @@ export const submitSeatingRequest = async (request: {
 // Fetch all seating requests for an attendee
 export const getSeatingRequestsForAttendee = async (attendee_id: string) => {
   try {
-    if (!supabase) {
-      return { success: false, error: 'Supabase unavailable', data: [] };
-    }
-    
     const { data, error } = await supabase
       .from('seating_requests')
       .select('*')
@@ -43,28 +35,6 @@ export const getSeatingRequestsForAttendee = async (attendee_id: string) => {
     if (error) throw error;
     return { success: true, data };
   } catch (e) {
-    console.error('Error retrieving seating requests:', e);
-    return { success: false, error: e, data: [] };
-  }
-};
-
-// Get all seating requests for a specific form/event
-export const getSeatingRequestsByType = async (request_type: string) => {
-  try {
-    if (!supabase) {
-      return { success: false, error: 'Supabase unavailable', data: [] };
-    }
-    
-    const { data, error } = await supabase
-      .from('seating_requests')
-      .select('*')
-      .eq('request_type', request_type)
-      .order('submitted_at', { ascending: false });
-
-    if (error) throw error;
-    return { success: true, data };
-  } catch (e) {
-    console.error('Error retrieving seating requests by type:', e);
     return { success: false, error: e, data: [] };
   }
 };
